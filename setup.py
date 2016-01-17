@@ -65,7 +65,7 @@ def main(argv):
 
             # create database
             try:
-                c.execute("create database %s" % config.db_name)
+                c.execute("create database %s character set utf8" % config.db_name)
                 c.execute("grant all privileges on %s.* to '%s'@'localhost' identified by '%s'" %
                           (config.db_name, config.db_user, config.db_pass))
                 c.execute("flush privileges")
