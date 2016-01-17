@@ -2,7 +2,7 @@ collipa
 =======
 ## 简介
 
-在yetone/collipa的基础上，升级到python3,并且升级其他的包.
+在yetone/collipa的基础上，升级到python3,并且升级其他的依赖包到最新版.
 
 ## 配置
 
