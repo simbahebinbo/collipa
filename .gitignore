@@ -1,0 +1,47 @@
+tags
+*.py[cod]
+*.sw[op]
+*~
+*.pkl
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+var
+bin
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+log
+collipa/static/upload
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+collipa/local_config.py
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+.idea
+.venv
+env/*
+
+provisioning/group_vars

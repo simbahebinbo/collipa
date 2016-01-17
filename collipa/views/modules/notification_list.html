@@ -1,0 +1,67 @@
+{% if notifications %}
+<ul class="item-list">
+  {% for n in notifications %}
+  <li class="item notification_{{ n.id }}">
+    {% if n.role == 'up' %}
+      {% if n.topic %}
+        您的主题 <b><a href="{{ n.topic.url_sharp }}">{{ escape(n.topic.title) }}</a></b>
+        获得了
+        {% for u in n.topic.get_uppers() %}
+        <a class="new-one" href="{{ u.url }}">{{ escape(u.nickname) }}</a>&nbsp;
+        {% end %}
+      {% elif n.reply %}
+        您在主题 <a href="{{ n.reply.topic.url_sharp }}">{{ escape(n.reply.topic.title) }}</a>
+        下的 <b><a href="{{ n.reply.url }}">评论</a></b> 获得了
+        {% for u in n.reply.get_uppers() %}
+        <a class="new-one" href="{{ u.url }}">{{ escape(u.nickname) }}</a>&nbsp;
+        {% end %}
+      {% end %}
+      的赞同
+    {% elif n.role == 'thank' %}
+      {% if n.topic %}
+        您的主题 <b><a href="{{ n.topic.url_sharp }}">{{ escape(n.topic.title) }}</a></b>
+        获得了
+        {% for u in n.topic.get_thankers() %}
+        <a class="new-one" href="{{ u.url }}">{{ escape(u.nickname) }}</a>&nbsp;
+        {% end %}
+      {% elif n.reply %}
+        您在主题 <a href="{{ n.reply.topic.url_sharp }}">{{ escape(n.reply.topic.title) }}</a>
+        下的 <b><a href="{{ n.reply.url }}">评论</a></b> 获得了
+        {% for u in n.reply.get_thankers() %}
+        <a class="new-one" href="{{ u.url }}">{{ escape(u.nickname) }}</a>&nbsp;
+        {% end %}
+      {% end %}
+      的感谢
+    {% elif n.role == 'reply' %}
+      {% if n.topic %}
+        您的主题 <b><a href="{{ n.topic.url_sharp }}">{{ escape(n.topic.title) }}</a></b>
+        获得了
+        {% for u in n.topic.get_replyers() %}
+        <a class="new-one" href="{{ u.url }}">{{ escape(u.nickname) }}</a>&nbsp;
+        {% end %}
+      {% end %}
+      的评论
+    {% elif n.role == 'mention' %}
+      {% if n.topic %}
+        主题 <b><a href="{{ n.topic.url_sharp }}">{{ escape(n.topic.title) }}</a></b>
+        提及了你
+      {% elif n.reply %}
+        主题 <a href="{{ n.reply.topic.url_sharp }}">{{ escape(n.reply.topic.title) }}</a>
+        下的 <b><a href="{{ n.reply.url }}">评论</a></b>
+        提及了你
+      {% elif n.tweet %}
+        <a href="{{ n.tweet.author.url }}">{{ escape(n.tweet.author.nickname) }}</a> 的 <b><a href="{{ n.tweet.url }}">推文</a></b>
+        提及了你
+      {% end %}
+    {% end %}
+    于 <time>{{ n.updated }}</time>
+  </li>
+  {% end %}
+</ul>
+{% else %}
+<div class="explain">
+  <div>
+    暂无提醒
+  </div>
+</div>
+{% end %}

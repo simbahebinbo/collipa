@@ -1,0 +1,141 @@
+{% extends "../layout.html" %}
+
+{% block subtitle %}
+{{ escape(topic.title) }}
+{% end %}
+{% block style %}
+  {% if topic.node.icon_img %}
+  <link rel="shortcut icon" href="{{ topic.node.icon }}" type="image/x-icon" />
+  {% end %}
+  {% if topic.node.head_img %}
+  <style type="text/css">
+    #head {
+      background: url({{ topic.node.head }});
+      background-size: 100%;
+    }
+  </style>
+  {% end %}
+  {% if topic.node.style %}
+  <style type="text/css">
+    {{ topic.node.style }}
+  </style>
+  {% end %}
+<link rel="stylesheet" tyle="text/css" href="{{ static_url('js/ext/ueditor/third-party/SyntaxHighlighter/shCoreDefault.css') }}"/>
+<script src="{{ static_url('js/ext/ueditor/third-party/SyntaxHighlighter/shCore.js') }}"></script>
+{% end %}
+{% block hidden %}
+<form id="remove-form" method="delete">
+  {{ xsrf_form_html() }}
+</form>
+{% end %}
+{% block script %}
+<script id="reply-template" type="text/template">
+  <li id="show-<%= id %>" data-id="<%= id %>" class="item clearfix">
+    <a class="avatar fl" href="<%= author_url %>">
+      <img class="avatar" src="<%= author_avatar %>">
+    </a>
+    <div class="item-content">
+      <div class="author-info">
+        <a class="name" data-name="<%= author_name %>"><%= author_nickname %></a>
+        <span><%= floor %> 楼,</span>
+        <a class="time" href="<%= reply_url %>"><%= created %></a>
+      </div>
+    <div class="content reply-content">
+      <%== content %>
+    </div>
+    <div class="meta">
+      <ul class="vote clearfix hidden">
+        <li class="up">
+          <a title="赞同" href="<%= reply_url %>?action=up">
+            <i class="icon-thumbs-up"></i>
+             赞同(0)
+          </a>
+        </li>
+        <li class="down">
+          <a title="反对" href="<%= reply_url %>?action=down">
+            <i class="icon-thumbs-down"></i>
+             反对(0)
+          </a>
+        </li>
+        <li class="collect">
+          <a title="收藏" href="<%= reply_url %>?action=collect">
+            <i class="icon-bookmark"></i>
+             收藏
+          </a>
+        </li>
+        <li class="edit">
+          <a title="修改" href="<%= reply_url %>/edit">
+            <i class="icon-pencil"></i>
+             修改
+          </a>
+        </li>
+      </ul>
+      <ul class="action clearfix">
+        <li class="reply">
+          <a title="回复" href="#;">
+            <i class="icon-reply"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </li>
+</script>
+<script src="{{ static_url('js/ext/ueditor/ueditor.config.js') }}"></script>
+<script src="{{ static_url('js/ext/ueditor/ueditor.all.min.js') }}"></script>
+<script type="text/javascript">
+  var width = $('#shape').width();
+  var ue = new UE.ui.Editor({initialFrameWidth: width * 0.75, initialFrameHeight: 200});
+  if ($('#editor').length > 0) {
+    ue.render("editor");
+  }
+</script>
+<script src="{{ static_url('js/upload.js') }}"></script>
+<script src="{{ static_url('js/topic.js') }}"></script>
+{% end %}
+{% block node_id_param %}
+?node_id={{ topic.node.id }}
+{% end %}
+{% block body %}
+<ul class="body-nav">
+  <li>
+    <a href="/"><i class="icon-home"></i>&nbsp;{{ handler.settings['site_name'] }}</a>
+  </li>
+  <li>
+    <a href="/nodes">节点</a>
+  </li>
+  <li>
+    <a href="{{ topic.node.url }}">{{ escape(topic.node.name) }}</a>
+  </li>
+</ul>
+{{ modules.TopicWrap(topic) }}
+<div class="organ reply-list">
+  <div class="nav-wrap">
+    <ul class="nav clearfix">
+      <li {% if category == 'all' %}class="on"{% end %}><a href="{{ topic.url }}">评论列表</a></li>
+      <li {% if category == 'hot' %}class="on"{% end %}><a href="{{ topic.url }}?category=hot">热门评论</a></li>
+    </ul>
+    <div class="nav-bottom">
+      <div class="nav-bottom-span"></div>
+    </div>
+  </div>
+  {{ modules.ReplyList(replies) }}
+  <script type="text/javascript">
+    SyntaxHighlighter.all();
+  </script>
+  {{ modules.Page(page=page, page_count=page_count, url=url) }}
+</div>
+{% if current_user %}
+<div class="organ reply-create">
+  <div class="organ-head no-border">
+    评论创建
+  </div>
+  <div class="organ-body">
+    {{ modules.ReplyForm(form=form, topic=topic, page=page, button="发布") }}
+    <form style="display: none;" method="post" action="/upload/music" enctype="multipart/form-data" method="post">
+      <input id='music-select' type="file" name="myfile" data-url="/upload/music"/>
+      {{ xsrf_form_html() }}
+    </form>
+  </div>
+</div>
+{% end %}
+{% end %}

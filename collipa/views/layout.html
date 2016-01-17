@@ -1,0 +1,173 @@
+<!--
+*******************************************************
+*******************************************************
+***************___****___******************************
+**************/\_ \**/\_ \*****************************
+****___****___\//\ \ \//\ \**/\_\**_____******__*******
+***/'___\ / __`\\ \ \**\ \ \*\/\ \/\ '__`\**/'__`\*****
+**/\ \__//\ \L\ \\_\ \_*\_\ \_\ \ \ \ \L\ \/\ \L\.\_***
+**\ \____\ \____//\____\/\____\\ \_\ \ ,__/\ \__/.\_\**
+***\/____/\/___/ \/____/\/____/ \/_/\ \ \/**\/__/\/_/**
+*************************************\ \_\*************
+**************************************\/_/*************
+*******************************************************
+*******************************************************
+**App Environments:************************************
+*******************************************************
+****Python: 2.7.6**************************************
+****Tornado: 3.1.1*************************************
+*******************************************************
+*******************************************************
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}{% block subtitle %}首页{% end %} - {{ handler.settings['site_title'] }}{% end %}</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="{{ static_url('css/font-awesome.min.css') }}">
+    <link rel="stylesheet" type="text/css" media="screen" href="{{ static_url('js/ext/chosen/chosen.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ static_url('css/base.css') }}" />
+    {% if current_user and current_user.site_style %}
+    <style type="text/css">
+      {{ current_user.site_style }}
+    </style>
+    {% end %}
+    {% block style %}{% end %}
+  </head>
+  <body>
+    <!--[if lte IE 8]>
+      <div class="error chromeframe">您正在使用<strong>漏洞百出</strong>的浏览器，为了正常地访问本网站，请升级您的浏览器 <a target="_blank" href="http://browsehappy.com">立即升级</a></div>
+    <![endif]-->
+    <div id="shape" class="shape">
+      <div id="head">
+        {% block head %}
+        <div class="logo"></div>
+        <div class="menu">
+          {% if current_user %}
+          {% if current_user.is_admin %}
+          <div class="menu-bar add-node">
+            <a title="添加节点" class="menu-icon icon-tag" href="/node/create{% block node_id_param %}{% end %}"></a>
+          </div>
+          {% end %}
+          <div class="menu-bar add-sth ">
+            <a title="添加" class="menu-icon icon-plus" href="javascript:;"></a>
+            <div class="min-menu dn">
+              <a class="min-menu-bar min-add-topic" title="添加主题" href="/topic/create{% block node_id_param %}{% end %}">添加主题</a>
+              <a class="min-menu-bar min-add-image" title="添加图片" href="javascript:;">添加图片</a>
+            </div>
+          </div>
+          {% if current_user.unread_notification_count > 0 %}
+          <div class="menu-bar notification">
+            <a title="提醒" class="menu-icon icon-bell-alt" href="/notifications?category=unread"></a>
+            <span class="count">
+              {{ current_user.unread_notification_count }}
+            </span>
+          </div>
+          {% else %}
+          <div class="menu-bar notification">
+            <a title="提醒" class="menu-icon icon-bell-alt" href="/notifications"></a>
+          </div>
+          {% end %}
+          {% if current_user.unread_message_box_count > 0 %}
+          <div class="menu-bar message">
+            <a title="私信" class="menu-icon icon-envelope-alt" href="/messages?category=unread"></a>
+            <span class="count">
+              {{ current_user.unread_message_box_count }}
+            </span>
+          </div>
+          {% else %}
+          <div class="menu-bar message">
+            <a title="私信" class="menu-icon icon-envelope-alt" href="/messages"></a>
+          </div>
+          {% end %}
+          <div class="menu-bar setting">
+            <a title="设置" class="menu-icon icon-cog" href="/account/setting"></a>
+          </div>
+          <div class="menu-bar home">
+            <a title="个人主页" class="menu-icon icon-user" href="{{ current_user.url }}"></a>
+          </div>
+          {% else %}
+          <div class="menu-bar signin">
+            <a title="登录" class="menu-icon icon-signin" href="/signin"></a>
+          </div>
+          <div class="menu-bar signup">
+            <a title="注册" class="menu-icon icon-plus-sign" href="/signup"></a>
+          </div>
+          {% end %}
+        </div>
+        {% end %}
+      </div>
+      <div id="body">
+        <ul class="s-nav clearfix">
+          {% set twitter = request.uri.startswith('/timeline') or request.uri.startswith('/tweet') %}
+          <li class="bbs{% if not twitter %} on{% end %}">
+            <a class="bbs" href="/">社区</a>
+          </li>
+          <li class="twitter{% if twitter %} on{% end %}">
+            <a href="/timeline">时间线</a>
+          </li>
+        </ul>
+        {% block body %}{% end %}
+      </div>
+    </div>
+    <div id="footer">
+      <div class="tc">
+        <a href="mailto:i@yetone.net">联系我</a>
+        &nbsp;
+        <span>·</span>
+        &nbsp;
+        <a id="online-count" href="/users?category=online">0 人在线</a>
+      </div>
+    </div>
+    <div class="hidden">
+      {% block hidden %}{% end %}
+      {% include "./includes/upload_form.html" %}
+    </div>
+  </body>
+  <script src="{{ static_url('js/jquery.js') }}"></script>
+  <script src="{{ static_url('js/ext/plugins.min.js') }}"></script>
+  <script src="{{ static_url('js/ext/template.min.js') }}"></script>
+  <script src="{{ static_url('js/ext/desktop-notify-min.js') }}"></script>
+  <script src="{{ static_url('js/ext/jquery.history.js') }}"></script>
+  <script src="{{ static_url('js/ext/chosen/chosen.jquery.min.js') }}"></script>
+  <script src="{{ static_url('js/base.js') }}"></script>
+  <script src="{{ static_url('js/all.js') }}"></script>
+  <script src="{{ static_url('js/websocket.js') }}"></script>
+
+  {% include "./includes/upload_script.html" %}
+
+  {% set flash_messages = handler.flash_message() %}
+  {% if flash_messages %}
+    <script>
+      {% for flash_cate, flash_msg in flash_messages %}
+      var result = {'status': '{{ flash_cate }}', 'message': '{{ flash_msg }}'};
+      noty(result, true);
+      {% end %}
+    </script>
+  {% end %}
+  {% include "./includes/upload_tpl.html" %}
+  <script id="mention-template" type="text/template">
+    <ul class="user-list">
+      <% for (var i=0, l=user_list.length; i < l; i++) { %>
+      <% user = user_list[i] %>
+      <li>
+        <a class="clearfix" data-url="<%= user.url %>" data-nickname="<%= user.nickname %>" data-username="<%= user.name >" href="javascript:;">
+          <img class="avatar" src="<%= user.avatar %>" />
+          <span class="username">
+            <span class="nickname">
+              <%= user.nickname %>
+            </span>
+            <span class="truename">
+              @<%= user.name %>
+            </span>
+          </span>
+        </a>
+      </li>
+      <% } %>
+    </ul>
+  </script>
+  <span id="script-block">
+  {% block script %}{% end %}
+  </span>
+</html>

@@ -1,0 +1,65 @@
+{% extends "../layout.html" %}
+
+{% block subtitle %}主题创建{% end %}
+{% block style %}
+  {% if node and node.icon_img %}
+  <link rel="shortcut icon" href="{{ node.icon }}" type="image/x-icon" />
+  {% end %}
+  {% if node and node.head_img %}
+  <style type="text/css">
+    #head {
+      background: url({{ node.head }});
+      background-size: 100%;
+    }
+  </style>
+  {% end %}
+  {% if node and node.style %}
+  <style type="text/css">
+    {{ node.style }}
+  </style>
+  {% end %}
+{% end %}
+{% block script %}
+<script src="{{ static_url('js/ext/ueditor/ueditor.config.js') }}"></script>
+<script src="{{ static_url('js/ext/ueditor/ueditor.all.min.js') }}"></script>
+<script type="text/javascript">
+  var width = $('#shape').width();
+  var ue = new UE.ui.Editor({initialFrameWidth: width * 0.75, initialFrameHeight: 300});
+  ue.render("editor");
+</script>
+
+<script src="{{ static_url('js/upload.js') }}"></script>
+<script src="{{ static_url('js/topic_create.js') }}"></script>
+{% end %}
+{% block node_id_param %}
+{% if node %}
+?node_id={{ node.id }}
+{% end %}
+{% end %}
+{% block body %}
+<ul class="body-nav">
+  <li>
+    <a href="/"><i class="icon-home"></i>&nbsp;{{ handler.settings['site_name'] }}</a>
+  </li>
+  {% if node %}
+  <li>
+    <a href="{{ node.url }}">{{ escape(node.name) }}</a>
+  </li>
+  {% end %}
+  <li class="now">
+    主题创建
+  </li>
+</ul>
+<div class="organ topic-create nav-shadow">
+  <div class="organ-head">
+    主题创建
+  </div>
+  <div class="organ-body">
+    {{ modules.TopicForm(form=form, button="创建") }}
+  </div>
+  <form style="display: none;" method="post" action="/upload/music" enctype="multipart/form-data" method="post">
+    <input id='music-select' type="file" name="myfile" data-url="/upload/music"/>
+    {{ xsrf_form_html() }}
+  </form>
+</div>
+{% end %}

@@ -1,0 +1,62 @@
+{% extends "../layout.html" %}
+
+{% block subtitle %}私信{% end %}
+{% block style %}
+  <link rel="shortcut icon" href="{{ current_user.get_avatar(size=48) }}" type="image/x-icon" />
+  {% module Template("modules/user_mixin.html", user=current_user) %}
+{% end %}
+{% block script %}
+<script src="{{ static_url('js/user.js') }}"></script>
+<script>
+  var $count = $('.message .count');
+  var count = parseInt($count.html());
+  count -= 1;
+  if (count !== 0) {
+    $count.html(count);
+  } else {
+    $count.remove();
+  }
+</script>
+{% end %}
+{% block body %}
+<ul class="body-nav">
+  <li>
+    <a href="/"><i class="icon-home"></i>&nbsp;{{ handler.settings['site_name'] }}</a>
+  </li>
+  <li>
+    <a href="/messages">私信</a>
+  </li>
+  <li class="now">
+    <a href="{{ message_box.receiver.url }}">
+      {{ escape(message_box.receiver.nickname) }}
+    </a>
+  </li>
+</ul>
+<div data-id="{{ message_box.id }}" class="organ message-box nav-shadow">
+  {{ modules.MessageList(messages=message_box.get_messages(page=page))}}
+  <div class="message-fm tc">
+    <div class="dib">
+    {{ modules.MessageForm(user=user, form=form) }}
+    </div>
+  </div>
+</div>
+<script id="message-tpl" type="text/template">
+  <li id="show-<%= id %>" data-id="<%= id %>" class="item message clearfix you">
+    <a class="avatar" href="<%= url %>">
+      <img class="avatar" src="<%= avatar %>">
+    </a>
+    <div class="item-content">
+      <div class="meta">
+        <span class="time"><%= created %></span>
+      </div>
+      <div class="content">
+        <%= content %>
+        <div class="caret">
+          <div class="caret-outer"></div>
+          <div class="caret-inner"></div>
+        </div>
+      </div>
+    </div>
+  </li>
+</script>
+{% end %}

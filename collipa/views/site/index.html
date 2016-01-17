@@ -1,0 +1,69 @@
+{% extends "../layout.html" %}
+
+{% block subtitle %}
+  {% if page > 1 %}第 {{ page }} 页 - {% end %}
+  {% if category == "index" %}
+  首页
+  {% elif category == "timeline" %}
+  我的关注
+  {% elif category == "hot" %}
+  热门
+  {% elif category == "latest" %}
+  最新
+  {% elif category == "desert" %}
+  荒漠
+  {% end %}
+{% end %}
+{% block script %}
+<script type="text/javascript" src="{{ static_url('js/index.js') }}"></script>
+{% end %}
+{% block body %}
+<div class="organ topic-list">
+  <div class="nav-wrap index-nav">
+    <ul class="nav clearfix">
+      <li {% if category == "index" %}class="on"{% end %}>
+        <a href="/?category=index">首页</a>
+      </li>
+      {% if current_user %}
+      <li {% if category == "timeline" %}class="on"{% end %}>
+        <a href="/?category=timeline">我的关注</a>
+      </li>
+      {% end %}
+      <li {% if category == "hot" %}class="on"{% end %}>
+        <a href="/?category=hot">热门</a>
+      </li>
+      <li {% if category == "latest" %}class="on"{% end %}>
+        <a href="/?category=latest">最新</a>
+      </li>
+      <li {% if category == "desert" %}class="on"{% end %}>
+        <a href="/?category=desert">荒漠</a>
+      </li>
+      <li>
+        <a href="/nodes">节点</a>
+      </li>
+    </ul>
+    <div class="nav-bottom">
+      <div class="nav-bottom-span"></div>
+    </div>
+  </div>
+  {% if category == "timeline" %}
+  <!--
+  <ul class="nav clearfix no-top-border minor-nav nav-shadow">
+    <li {% if view == "all" %}class="on"{% end %}>
+      <a href="/?view=all">全部</a>
+    </li>
+    <li {% if view == "node" %}class="on"{% end %}>
+      <a href="/?view=node">节点</a>
+    </li>
+    <li {% if view == "user" %}class="on"{% end %}>
+      <a href="/?view=user">用户</a>
+    </li>
+  </ul>
+  -->
+  {% end %}
+  <span id="pjax-content">
+  {{ modules.TopicList(topics) }}
+  </span>
+</div>
+{{ modules.Page(page=page, page_count=page_count, url=url) }}
+{% end %}
