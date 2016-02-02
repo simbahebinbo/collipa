@@ -1,3 +1,3 @@
-__author__ = 'yetone'
+# coding: utf-8
 
 from . import tweet

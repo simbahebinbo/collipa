@@ -1,6 +1,5 @@
 # coding: utf-8
 
-__author__ = 'yetone'
 
 from io import StringIO
 from PIL import Image as Img

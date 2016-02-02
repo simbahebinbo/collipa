@@ -13,6 +13,7 @@ from collipa.extensions import mc, rd, memcached
 from collipa.supports import Struct
 
 
+
 class User(db.Entity, BaseModel):
     name = orm.Required(str, 40, unique=True)
     email = orm.Required(str, unique=True)

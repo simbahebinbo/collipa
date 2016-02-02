@@ -1,6 +1,5 @@
 # coding: utf-8
 
-__author__ = 'yetone'
 
 from threading import Thread
 from functools import wraps

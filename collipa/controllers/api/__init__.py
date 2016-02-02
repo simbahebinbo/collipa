@@ -1,1 +1,1 @@
-__author__ = 'yetone'
+# coding: utf-8

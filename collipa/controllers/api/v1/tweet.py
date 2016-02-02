@@ -1,4 +1,4 @@
-__author__ = 'yetone'
+# coding: utf-8
 
 from pony import orm
 from collipa.models import Tweet

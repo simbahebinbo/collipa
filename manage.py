@@ -1,4 +1,4 @@
-__author__ = 'yetone'
+# coding: utf-8
 
 from script_manager import Manager
 from collipa.app import app_manager
