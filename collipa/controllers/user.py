@@ -8,7 +8,8 @@ import os
 import logging
 import tempfile
 from pony import orm
-# from concurrent import futures
+from concurrent import futures
+
 
 from .web_api import WebSocketHandler
 from ._base import BaseHandler
@@ -33,9 +34,9 @@ class EmailMixin(object):
     def _create_token(self, user):
         salt = user.create_token(8)
         created = str(int(time.time()))
-        hsh = hashlib.sha1(salt + created + user.token).hexdigest()
+        hsh = hashlib.sha1((salt + created + user.token).encode(encoding="utf-8")).hexdigest()
         token = "%s|%s|%s|%s" % (user.email, salt, created, hsh)
-        return base64.b64encode(token)
+        return hashlib.md5(token.encode(encoding="utf-8"))
 
     @orm.db_session
     def _verify_token(self, token):
@@ -566,8 +567,8 @@ class AvatarCropHandler(BaseHandler):
             tmp_name_ = '%sx%d%s' % (save_path, size[0], image_format)
             image_.save(tmp_name_)
 
-        # with futures.ThreadPoolExecutor(max_workers=len(size_set)) as exe:
-        #     list(exe.map(resize, size_set))
+        with futures.ThreadPoolExecutor(max_workers=len(size_set)) as exe:
+            list(exe.map(resize, size_set))
 
         if user.avatar:
             try:

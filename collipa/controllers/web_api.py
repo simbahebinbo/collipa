@@ -24,7 +24,7 @@ class WebSocketHandler(BaseHandler, tornado.websocket.WebSocketHandler):
         super(WebSocketHandler, self).__init__(application, request, **kwargs)
         self.user_id = None
         if self.current_user:
-            self.user_id = self.current_user.id
+            self.user_id = self.current_user
 
     @orm.db_session
     def open(self):

@@ -194,8 +194,7 @@ class User(db.Entity, BaseModel):
         return
 
     def gravatar_url(self, size=48):
-        return 'http://gravatar.com/avatar/%s?d=identicon&s=%d&d=%s%s' % (hashlib.md5(self.email.strip().lower().encode('utf-8')).hexdigest(),
-                                                                          size, config.site_url, config.user_avatar_url)
+        return '%s%s' % (config.site_url, config.user_avatar_url)
 
     def get_avatar(self, size=48):
         if self.avatar:
@@ -210,7 +209,7 @@ class User(db.Entity, BaseModel):
     @staticmethod
     def create_password(raw):
         salt = User.create_token(8)
-        hsh = hashlib.sha1(salt + raw + config.password_secret).hexdigest()
+        hsh = hashlib.sha1((salt + raw + config.password_secret).encode(encoding="utf-8")).hexdigest()
         return "%s$%s" % (salt, hsh)
 
     @staticmethod
@@ -225,7 +224,7 @@ class User(db.Entity, BaseModel):
         if not self.password or '$' not in self.password:
             return False
         salt, hsh = self.password.split('$')
-        verify = hashlib.sha1(salt + raw + config.password_secret).hexdigest()
+        verify = hashlib.sha1((salt + raw + config.password_secret).encode(encoding="utf-8")).hexdigest()
         return verify == hsh
 
     def save(self, category='new'):
