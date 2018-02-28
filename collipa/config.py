@@ -21,7 +21,7 @@ cookie_secret = 'cookiesecret'  # cookie secret
 password_secret = 'passwordsecret'  # password secret
 
 site_name = 'Collipa'
-site_url = 'http://127.0.0.1:8008'
+site_url = 'http://127.0.0.1:9090'
 site_description = 'Good'
 
 paged = 18

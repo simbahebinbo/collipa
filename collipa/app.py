@@ -48,7 +48,7 @@ app_manager = Manager()
 
 
 @app_manager.command
-def runserver(port=8080, address="0.0.0.0"):
+def runserver(port=9090, address="0.0.0.0"):
     port = int(port)
     db.generate_mapping()
     tornado.httpserver.HTTPServer(Application(),
