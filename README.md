@@ -4,11 +4,11 @@ collipa
 
 在yetone/collipa的基础上，升级到python3,并且升级其他的依赖包到最新版.
 
+###运行环境
+ubuntu 16.04
+
 ## 配置
 
-```
-mv config.back.py config.py
-```
 修改 collipa/config.py 文件：
 
 ### 数据库
@@ -51,9 +51,13 @@ sudo apt-get install redis-server
 ```
 
 ### 安装其他
-
 ```
-sudo pip3 install -r requirements.txt
+sudo ./apt-get.sh
+```
+
+###安装python3依赖包
+```
+pip3 install -r requirements.txt
 ```
 
 ## 初始化数据库
@@ -65,7 +69,7 @@ python3 setup.py --init
 ## 运行
 
 ```
-python3 manage.py app runserver
+./run.sh
 ```
 
 ##License
