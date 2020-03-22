@@ -9,7 +9,7 @@ from ._base import db, BaseModel
 from collipa import config
 import collipa.models
 from collipa.helpers import format_date2, strip_tags, remove_file, get_asset_path, collect_items_from_query
-from collipa.extensions import mc, rd, memcached
+from collipa.extensions import rd, cached
 from collipa.supports import Struct
 
 
@@ -761,21 +761,21 @@ class User(db.Entity, BaseModel):
     @staticmethod
     def get_users(page=1, category='all', limit=None):
         if category == 'all':
-            users = orm.select(rv for rv in User).order_by(lambda:
+            users = orm.select(rv for rv in User).order_by(lambda rv:
                                                            orm.desc(rv.created_at))
         elif category == 'hot':
-            users = mc.get('hot_users')
+            users = rd.get('hot_users')
             if not users:
                 if not limit:
                     limit = 8
-                users = orm.select(rv for rv in User).order_by(lambda:
+                users = orm.select(rv for rv in User).order_by(lambda rv:
                                                                orm.desc(rv.thank_count * 4 +
                                                                         rv.up_count * 3 +
                                                                         rv.topic_count * 2 +
                                                                         rv.reply_count))[:limit]
-                mc.set('hot_users', list(users), 60 * 60 * 12)
+                rd.set('hot_users', list(users), 60 * 60 * 12)
         elif category == 'new':
-            users = orm.select(rv for rv in User).order_by(lambda: orm.desc(rv.created_at))
+            users = orm.select(rv for rv in User).order_by(lambda rv: orm.desc(rv.created_at))
         else:
             return []
 
@@ -783,13 +783,13 @@ class User(db.Entity, BaseModel):
             return users[:limit]
         if page:
             return users[(page - 1) * config.user_paged: page *
-                         config.user_paged]
+                                                         config.user_paged]
         else:
             return users
 
     @staticmethod
     def mention(word):
-        @memcached('word_' + str(word), 3600)
+        @cached('word_' + str(word), 3600)
         def _func():
             return word and orm.select(rv for rv in User if
                                        (word in rv.name or

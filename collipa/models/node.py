@@ -7,7 +7,6 @@ from collipa import config
 import collipa.models
 
 from collipa.helpers import strip_tags
-from collipa.extensions import mc
 
 
 class Node(db.Entity, BaseModel):
