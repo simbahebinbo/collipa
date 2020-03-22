@@ -2,7 +2,7 @@
 
 import logging
 import tempfile
-import tornado.web
+from tornado import web
 from pony import orm
 from ._base import BaseHandler
 from .user import EmailMixin
@@ -19,7 +19,7 @@ class HomeHandler(BaseHandler, EmailMixin):
         image_id = int(image_id)
         image = Image.get(id=image_id)
         if not image:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         return self.render("image/index.html", image=image)
 
     @orm.db_session
@@ -28,7 +28,7 @@ class HomeHandler(BaseHandler, EmailMixin):
         image_id = int(image_id)
         image = Image.get(id=image_id)
         if not image:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         album_id = self.get_int('album_id', None)
         if not album_id:
             return self.send_error_result(msg='没有指定专辑哦')
@@ -41,9 +41,8 @@ class HomeHandler(BaseHandler, EmailMixin):
             image.album_id = album_id
         return self.send_success_result()
 
-
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def delete(self, image_id):
         image = Image.get(id=image_id)
         if not image:
@@ -88,7 +87,7 @@ class ListHandler(BaseHandler):
 
 class UploadHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def post(self):
         if not self.request.files or 'myimage' not in self.request.files:

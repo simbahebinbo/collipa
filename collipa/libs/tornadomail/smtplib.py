@@ -46,16 +46,13 @@ import re
 import email.utils
 import base64
 import hmac
-# from email.base64mime import encode as encode_base64
 from base64 import b64encode as encode_base64
 from sys import stderr
 from functools import partial
-import contextlib
+from collipa.extensions import il
 
 from tornado import gen
 from tornado import iostream
-from tornado import ioloop
-from tornado import stack_context
 
 __all__ = ["SMTPException","SMTPServerDisconnected","SMTPResponseException",
            "SMTPSenderRefused","SMTPRecipientsRefused","SMTPDataError",
@@ -286,7 +283,7 @@ class SMTP:
         self.__get_ssl_socket = stream
         callback(stream)
 
-    @gen.engine
+    @gen.coroutine
     def connect(self, host='localhost', port = 0, callback=None):
         """Connect to a host on a given port.
 
@@ -306,12 +303,12 @@ class SMTP:
                 except ValueError:
                     raise socket.error("nonnumeric port")
         if not port: port = self.default_port
-        result = yield gen.Task(
+        result = yield il.add_callback(
             self._get_socket, port, host, self.timeout
         )
         self.sock = result.kwargs['socket']
         if self.debuglevel > 0: print('connect:', (host, port), file=stderr)
-        result = yield gen.Task(self.getreply)
+        result = yield il.add_callback(self.getreply)
         (code, msg) = result.args
         if self.debuglevel > 0: print("connect:", msg, file=stderr)
         if callback:
@@ -337,7 +334,7 @@ class SMTP:
             str = '%s %s%s' % (cmd, args, CRLF)
         self.send(str, callback=callback)
 
-    @gen.engine
+    @gen.coroutine
     def getreply(self, callback):
         """Get a reply from the server.
 
@@ -354,7 +351,7 @@ class SMTP:
         resp=[]
         while 1:
             try:
-                line = yield gen.Task(self.sock.read_until, '\n')
+                line = yield il.add_callback(self.sock.read_until, '\n')
             except socket.error:
                 line = ''
             if line == '':
@@ -379,35 +376,35 @@ class SMTP:
             print('reply: retcode (%s); Msg: %s' % (errcode,errmsg), file=stderr)
         callback(errcode, errmsg)
 
-    @gen.engine
+    @gen.coroutine
     def docmd(self, cmd, args="", callback=None):
         """Send a command, and return its response code."""
-        yield gen.Task(self.putcmd, cmd, args)
+        yield il.add_callback(self.putcmd, cmd, args)
         self.getreply(callback)
 
     # std smtp commands
-    @gen.engine
+    @gen.coroutine
     def helo(self, name='', callback=None):
         """SMTP 'helo' command.
         Hostname to send for this command defaults to the FQDN of the local
         host.
         """
-        yield gen.Task(self.putcmd, "helo", name or self.local_hostname)
-        result = yield gen.Task(self.getreply)
+        yield il.add_callback(self.putcmd, "helo", name or self.local_hostname)
+        result = yield il.add_callback(self.getreply)
         (code, msg) = result.args
         self.helo_resp = msg
         if callback:
             callback(code, msg)
 
-    @gen.engine
+    @gen.coroutine
     def ehlo(self, name='', callback=None):
         """ SMTP 'ehlo' command.
         Hostname to send for this command defaults to the FQDN of the local
         host.
         """
         self.esmtp_features = {}
-        yield gen.Task(self.putcmd, self.ehlo_msg, name or self.local_hostname)
-        result = yield gen.Task(self.getreply)
+        yield il.add_callback(self.putcmd, self.ehlo_msg, name or self.local_hostname)
+        result = yield il.add_callback(self.getreply)
         (code, msg) = result.args
         # According to RFC1869 some (badly written)
         # MTA's will disconnect on an ehlo. Toss an exception if
@@ -458,47 +455,47 @@ class SMTP:
         """Does the server support a given SMTP service extension?"""
         return opt.lower() in self.esmtp_features
 
-    @gen.engine
+    @gen.coroutine
     def help(self, args='', callback=None):
         """SMTP 'help' command.
         Returns help text from server."""
         yield self.putcmd("help", args)
-        result = yield gen.Task(self.getreply)
+        result = yield il.add_callback(self.getreply)
         (code, msg) = result.args
         if callback:
             callback(msg)
 
-    @gen.engine
+    @gen.coroutine
     def rset(self, callback):
         """SMTP 'rset' command -- resets session."""
-        result = yield gen.Task(self.docmd, "rset")
+        result = yield il.add_callback(self.docmd, "rset")
         callback(*result.args, **result.kwargs)
 
-    @gen.engine
+    @gen.coroutine
     def noop(self, callback):
         """SMTP 'noop' command -- doesn't do anything :>"""
-        result = yield gen.Task(self.docmd, "noop")
+        result = yield il.add_callback(self.docmd, "noop")
         callback(*result.args, **result.kwargs)
 
-    @gen.engine
+    @gen.coroutine
     def mail(self, sender, options=[], callback=None):
         """SMTP 'mail' command -- begins mail xfer session."""
         optionlist = ''
         if options and self.does_esmtp:
             optionlist = ' ' + ' '.join(options)
-        yield gen.Task(self.putcmd, "mail", "FROM:%s%s" % (quoteaddr(sender) ,optionlist))
+        yield il.add_callback(self.putcmd, "mail", "FROM:%s%s" % (quoteaddr(sender) ,optionlist))
         self.getreply(callback)
 
-    @gen.engine
+    @gen.coroutine
     def rcpt(self,recip,options=[], callback=None):
         """SMTP 'rcpt' command -- indicates 1 recipient for this mail."""
         optionlist = ''
         if options and self.does_esmtp:
             optionlist = ' ' + ' '.join(options)
-        yield gen.Task(self.putcmd, "rcpt", "TO:%s%s" % (quoteaddr(recip),optionlist))
+        yield il.add_callback(self.putcmd, "rcpt", "TO:%s%s" % (quoteaddr(recip),optionlist))
         self.getreply(callback)
 
-    @gen.engine
+    @gen.coroutine
     def data(self, msg, callback=None):
         """SMTP 'DATA' command -- sends message data to server.
 
@@ -507,8 +504,8 @@ class SMTP:
         DATA command; the return value from this method is the final
         response code received when the all data is sent.
         """
-        yield gen.Task(self.putcmd, "data")
-        result = yield gen.Task(self.getreply)
+        yield il.add_callback(self.putcmd, "data")
+        result = yield il.add_callback(self.getreply)
         (code, repl) = result.args
         if self.debuglevel >0 : print("data:", (code,repl), file=stderr)
         if code != 354:
@@ -518,8 +515,8 @@ class SMTP:
             if q[-2:] != CRLF:
                 q = q + CRLF
             q = q + "." + CRLF
-            yield gen.Task(self.send, q)
-            result = yield gen.Task(self.getreply)
+            yield il.add_callback(self.send, q)
+            result = yield il.add_callback(self.getreply)
             (code, msg) = result.args
             if self.debuglevel >0 : print("data:", (code,msg), file=stderr)
             if callback:
@@ -537,7 +534,7 @@ class SMTP:
 
     # some useful methods
 
-    @gen.engine
+    @gen.coroutine
     def ehlo_or_helo_if_needed(self, callback):
         """Call self.ehlo() and/or self.helo() if needed.
 
@@ -550,17 +547,17 @@ class SMTP:
                                   the helo greeting.
         """
         if self.helo_resp is None and self.ehlo_resp is None:
-            result = yield gen.Task(self.ehlo)
+            result = yield il.add_callback(self.ehlo)
             code = result.args[0]
             if not (200 <= code <= 299):
-                result = yield gen.Task(self.helo)
+                result = yield il.add_callback(self.helo)
                 (code, resp) = result.args
                 if not (200 <= code <= 299):
                     raise SMTPHeloError(code, resp)
         callback()
 
 
-    @gen.engine
+    @gen.coroutine
     def login(self, user, password, callback=None):
         """Log in on an SMTP server that requires authentication.
 
@@ -596,7 +593,7 @@ class SMTP:
         AUTH_CRAM_MD5 = "CRAM-MD5"
         AUTH_LOGIN = "LOGIN"
 
-        yield gen.Task(self.ehlo_or_helo_if_needed)
+        yield il.add_callback(self.ehlo_or_helo_if_needed)
 
         if not self.has_extn("auth"):
             raise SMTPException("SMTP AUTH extension not supported by server.")
@@ -617,26 +614,26 @@ class SMTP:
                 break
 
         if authmethod == AUTH_CRAM_MD5:
-            result = yield gen.Task(self.docmd, "AUTH", AUTH_CRAM_MD5)
+            result = yield il.add_callback(self.docmd, "AUTH", AUTH_CRAM_MD5)
             (code, resp) = result.args
             if code == 503:
                 # 503 == 'Error: already authenticated'
                 if callback:
                     callback(code, resp)
-            result = yield gen.Task(self.docmd, encode_cram_md5(resp, user, password))
+            result = yield il.add_callback(self.docmd, encode_cram_md5(resp, user, password))
             (code, resp) = result.args
         elif authmethod == AUTH_PLAIN:
-            result = yield gen.Task(self.docmd, "AUTH",
+            result = yield il.add_callback(self.docmd, "AUTH",
                 AUTH_PLAIN + " " + encode_plain(user, password)
             )
             (code, resp) = result.args
         elif authmethod == AUTH_LOGIN:
-            result = yield gen.Task(self.docmd, "AUTH",
+            result = yield il.add_callback(self.docmd, "AUTH",
                 "%s %s" % (AUTH_LOGIN, encode_base64(user, eol="")))
             (code, resp) = result.args
             if code != 334:
                 raise SMTPAuthenticationError(code, resp)
-            result = yield gen.Task(self.docmd, encode_base64(password, eol=""))
+            result = yield il.add_callback(self.docmd, encode_base64(password, eol=""))
             (code, resp) = result.args
         elif authmethod is None:
             raise SMTPException("No suitable authentication method found.")
@@ -647,7 +644,7 @@ class SMTP:
         if callback:
             callback(code, resp)
 
-    @gen.engine
+    @gen.coroutine
     def starttls(self, keyfile=None, certfile=None, callback=None):
         """Puts the connection to the SMTP server into TLS mode.
 
@@ -665,15 +662,15 @@ class SMTP:
          SMTPHeloError            The server didn't reply properly to
                                   the helo greeting.
         """
-        yield gen.Task(self.ehlo_or_helo_if_needed)
+        yield il.add_callback(self.ehlo_or_helo_if_needed)
         if not self.has_extn("starttls"):
             raise SMTPException("STARTTLS extension not supported by server.")
-        result = yield gen.Task(self.docmd, "STARTTLS")
+        result = yield il.add_callback(self.docmd, "STARTTLS")
         (resp, reply) = result.args
         if resp == 220:
             if not _have_ssl:
                 raise RuntimeError("No SSL support included in this Python")
-            self.sock = yield gen.Task(
+            self.sock = yield il.add_callback(
                 self._get_ssl_socket, self.sock,
                 keyfile=keyfile, certfile=certfile
             )
@@ -688,7 +685,7 @@ class SMTP:
         if callback:
             callback(resp, reply)
 
-    @gen.engine
+    @gen.coroutine
     def sendmail(self, from_addr, to_addrs, msg, mail_options=[],
                  rcpt_options=[], callback=None):
         """This command performs an entire mail transaction.
@@ -731,7 +728,7 @@ class SMTP:
          >>> import smtplib
          >>> s=smtplib.SMTP("localhost")
          >>> tolist=["one@one.org","two@two.org","three@three.org","four@four.org"]
-         >>> msg = '''\\
+         >>> msg = '''
          ... From: Me@my.org
          ... Subject: testin'...
          ...
@@ -746,7 +743,7 @@ class SMTP:
         empty dictionary.
 
         """
-        yield gen.Task(self.ehlo_or_helo_if_needed)
+        yield il.add_callback(self.ehlo_or_helo_if_needed)
         esmtp_opts = []
         if self.does_esmtp:
             # Hmmm? what's this? -ddm
@@ -756,27 +753,27 @@ class SMTP:
             for option in mail_options:
                 esmtp_opts.append(option)
 
-        result = yield gen.Task(self.mail, from_addr, esmtp_opts)
+        result = yield il.add_callback(self.mail, from_addr, esmtp_opts)
         (code, resp) = result.args
         if code != 250:
-            yield gen.Task(self.rset)
+            yield il.add_callback(self.rset)
             raise SMTPSenderRefused(code, resp, from_addr)
         senderrs={}
         if isinstance(to_addrs, str):
             to_addrs = [to_addrs]
         for each in to_addrs:
-            result = yield gen.Task(self.rcpt, each, rcpt_options)
+            result = yield il.add_callback(self.rcpt, each, rcpt_options)
             (code, resp) = result.args
             if (code != 250) and (code != 251):
                 senderrs[each]=(code, resp)
         if len(senderrs)==len(to_addrs):
             # the server refused all our recipients
-            yield gen.Task(self.rset)
+            yield il.add_callback(self.rset)
             raise SMTPRecipientsRefused(senderrs)
-        result = yield gen.Task(self.data, msg)
+        result = yield il.add_callback(self.data, msg)
         (code, resp) = result.args
         if code != 250:
-            yield gen.Task(self.rset)
+            yield il.add_callback(self.rset)
             raise SMTPDataError(code, resp)
         #if we got here then somebody got our mail
         if callback:
@@ -789,80 +786,10 @@ class SMTP:
             self.sock.close()
         self.sock = None
 
-    @gen.engine
+    @gen.coroutine
     def quit(self, callback=None):
         """Terminate the SMTP session."""
-        res = yield gen.Task(self.docmd, "quit")
+        res = yield il.add_callback(self.docmd, "quit")
         self.close()
         if callback:
             callback(res)
-
-# if _have_ssl:
-# 
-#     class SMTP_SSL(SMTP):
-#         """ This is a subclass derived from SMTP that connects over an SSL encrypted
-#         socket (to use this class you need a socket module that was compiled with SSL
-#         support). If host is not specified, '' (the local host) is used. If port is
-#         omitted, the standard SMTP-over-SSL port (465) is used. keyfile and certfile
-#         are also optional - they can contain a PEM formatted private key and
-#         certificate chain file for the SSL connection.
-#         """
-#         def __init__(self, host='', port=0, local_hostname=None,
-#                      keyfile=None, certfile=None,
-#                      timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
-#             self.keyfile = keyfile
-#             self.certfile = certfile
-#             SMTP.__init__(self, host, port, local_hostname, timeout)
-#             self.default_port = SMTP_SSL_PORT
-# 
-#         def _get_socket(self, host, port, timeout):
-#             if self.debuglevel > 0: print>>stderr, 'connect:', (host, port)
-#             new_socket = socket.create_connection((host, port), timeout)
-#             new_socket = ssl.wrap_socket(new_socket, self.keyfile, self.certfile)
-#             self.file = SSLFakeFile(new_socket)
-#             return new_socket
-# 
-#     __all__.append("SMTP_SSL")
-# 
-# #
-# # LMTP extension
-# #
-# LMTP_PORT = 2003
-# 
-# class LMTP(SMTP):
-#     """LMTP - Local Mail Transfer Protocol
-# 
-#     The LMTP protocol, which is very similar to ESMTP, is heavily based
-#     on the standard SMTP client. It's common to use Unix sockets for LMTP,
-#     so our connect() method must support that as well as a regular
-#     host:port server. To specify a Unix socket, you must use an absolute
-#     path as the host, starting with a '/'.
-# 
-#     Authentication is supported, using the regular SMTP mechanism. When
-#     using a Unix socket, LMTP generally don't support or require any
-#     authentication, but your mileage might vary."""
-# 
-#     ehlo_msg = "lhlo"
-# 
-#     def __init__(self, host = '', port = LMTP_PORT, local_hostname = None):
-#         """Initialize a new instance."""
-#         SMTP.__init__(self, host, port, local_hostname)
-# 
-#     def connect(self, host = 'localhost', port = 0):
-#         """Connect to the LMTP daemon, on either a Unix or a TCP socket."""
-#         if host[0] != '/':
-#             return SMTP.connect(self, host, port)
-# 
-#         # Handle Unix-domain sockets.
-#         try:
-#             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-#             self.sock.connect(host)
-#         except socket.error, msg:
-#             if self.debuglevel > 0: print>>stderr, 'connect fail:', host
-#             if self.sock:
-#                 self.sock.close()
-#             self.sock = None
-#             raise socket.error, msg
-#         (code, msg) = self.getreply()
-#         if self.debuglevel > 0: print>>stderr, "connect:", msg
-#         return (code, msg)

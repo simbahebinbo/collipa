@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import tornado.web
+from tornado import web
 
 from ._base import BaseHandler
 from pony import orm
@@ -15,7 +15,7 @@ class HomeHandler(BaseHandler):
         album_id = int(album_id)
         album = Album.get(id=album_id)
         if not album:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         return self.render("album/index.html", album=album, page=self.page)
 
     @orm.db_session
@@ -23,7 +23,7 @@ class HomeHandler(BaseHandler):
         tweet_id = int(tweet_id)
         tweet = Tweet.get(id=tweet_id)
         if not tweet:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         action = self.get_argument('action', None)
         user = self.current_user
         if action and user:
@@ -32,13 +32,13 @@ class HomeHandler(BaseHandler):
                     result = user.up(tweet_id=tweet.id)
                 else:
                     result = {'status': 'info', 'message':
-                              '不能为自己的推文投票'}
+                        '不能为自己的推文投票'}
             if action == 'down':
                 if tweet.user_id != user.id:
                     result = user.down(tweet_id=tweet.id)
                 else:
                     result = {'status': 'info', 'message':
-                              '不能为自己的推文投票'}
+                        '不能为自己的推文投票'}
             if action == 'collect':
                 result = user.collect(tweet_id=tweet.id)
             if action == 'thank':
@@ -51,7 +51,7 @@ class HomeHandler(BaseHandler):
             return self.redirect_next_url()
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def delete(self, tweet_id):
         if not self.current_user.is_admin:
             return self.redirect_next_url()
@@ -66,7 +66,7 @@ class HomeHandler(BaseHandler):
 class CreateHandler(BaseHandler):
     @orm.db_session
     @require_permission
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         if not self.has_permission:
             return

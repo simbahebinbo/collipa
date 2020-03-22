@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import tornado.web
+from tornado import web
 
 from ._base import BaseHandler
 from pony import orm
@@ -18,11 +18,11 @@ class HomeHandler(BaseHandler, EmailMixin):
         reply_id = int(reply_id)
         reply = Reply.get(id=reply_id)
         if not reply:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         return self.render("reply/index.html", reply=reply)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def put(self, reply_id):
         reply_id = int(reply_id)
         reply = Reply.get(id=reply_id)
@@ -30,24 +30,24 @@ class HomeHandler(BaseHandler, EmailMixin):
         user = self.current_user
 
         if not reply:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
 
         result = {}
         if not action:
             result = {'status': 'info', 'message':
-                      '缺少 action 参数'}
+                '缺少 action 参数'}
         if action == 'up':
             if reply.user_id != user.id:
                 result = user.up(reply_id=reply.id)
             else:
                 result = {'status': 'info', 'message':
-                          '不能为自己的评论投票'}
+                    '不能为自己的评论投票'}
         if action == 'down':
             if reply.user_id != user.id:
                 result = user.down(reply_id=reply.id)
             else:
                 result = {'status': 'info', 'message':
-                          '不能为自己的评论投票'}
+                    '不能为自己的评论投票'}
         if action == 'collect':
             result = user.collect(reply_id=reply.id)
         if action == 'thank':
@@ -57,7 +57,7 @@ class HomeHandler(BaseHandler, EmailMixin):
         return self.send_result(result)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def delete(self, reply_id):
         if not self.current_user.is_admin:
             return self.redirect_next_url()
@@ -85,7 +85,7 @@ class HomeHandler(BaseHandler, EmailMixin):
 
 class CreateHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def post(self):
         page = int(self.get_argument('page', 1))
@@ -107,8 +107,8 @@ class CreateHandler(BaseHandler):
             result = {'status': 'success', 'message': '评论创建成功',
                       'content': reply.content, 'name': reply.author.name,
                       'nickname': reply.author.nickname, 'author_avatar':
-                      reply.author.get_avatar(size=48), 'author_url':
-                      reply.author.url, 'author_name': reply.author.name,
+                          reply.author.get_avatar(size=48), 'author_url':
+                          reply.author.url, 'author_name': reply.author.name,
                       'author_nickname': reply.author.nickname,
                       'reply_url': reply.url, 'created': reply.created,
                       'id': reply.id, 'floor': reply.floor}
@@ -127,7 +127,7 @@ class CreateHandler(BaseHandler):
 
 class EditHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def get(self, reply_id):
         reply = Reply.get(id=reply_id)
@@ -137,7 +137,7 @@ class EditHandler(BaseHandler):
         return self.render("reply/edit.html", form=form, reply=reply)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def post(self, reply_id):
         reply = Reply.get(id=reply_id)

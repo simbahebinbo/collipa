@@ -2,24 +2,21 @@ import mimetypes
 import os
 import random
 import time
-from email import charset, encoders
-try:
-    from email.generator import Generator
-except ImportError:
-    from email.Generator import Generator # TODO: Remove when remove Python 2.4 support
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
+from email import charset
+from email.generator import Generator
 from email.header import Header
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import formatdate, getaddresses, formataddr, parseaddr
-
-from .utils import DNS_NAME
-from .encoding import smart_str, force_unicode
+from io import StringIO
+from email import encoders
 
 from tornado import gen
+from collipa.extensions import il
 
-
-from io import StringIO
+from .encoding import smart_str, force_unicode
+from .utils import DNS_NAME
 
 # Don't BASE64-encode UTF-8 messages so that we avoid unwanted attention from
 # some spam filters.
@@ -91,7 +88,7 @@ def forbid_multi_line_headers(name, val, encoding):
     except UnicodeEncodeError:
         if name.lower() in ADDRESS_HEADERS:
             val = ', '.join(sanitize_address(addr, encoding)
-                for addr in getaddresses((val,)))
+                            for addr in getaddresses((val,)))
         else:
             val = str(Header(val, encoding))
     else:
@@ -137,7 +134,7 @@ class SafeMIMEText(MIMEText):
         lines that begin with 'From '. See bug #13433 for details.
         """
         fp = StringIO()
-        g = Generator(fp, mangle_from_ = False)
+        g = Generator(fp, mangle_from_=False)
         g.flatten(self, unixfrom=unixfrom)
         return fp.getvalue()
 
@@ -161,7 +158,7 @@ class SafeMIMEMultipart(MIMEMultipart):
         lines that begin with 'From '. See bug #13433 for details.
         """
         fp = StringIO()
-        g = Generator(fp, mangle_from_ = False)
+        g = Generator(fp, mangle_from_=False)
         g.flatten(self, unixfrom=unixfrom)
         return fp.getvalue()
 
@@ -172,7 +169,7 @@ class EmailMessage(object):
     """
     content_subtype = 'html'
     mixed_subtype = 'mixed'
-    encoding = None     # None => use settings default
+    encoding = None  # None => use settings default
 
     def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
                  connection=None, attachments=None, headers=None, cc=None, reply_to=None):
@@ -199,7 +196,7 @@ class EmailMessage(object):
             self.bcc = list(bcc)
         else:
             self.bcc = []
-        self.from_email = from_email or DEFAULT_FROM_EMAIL
+        self.from_email = from_email
         self.reply_to = reply_to
         self.subject = subject
         self.body = body
@@ -221,7 +218,7 @@ class EmailMessage(object):
         msg['Subject'] = self.subject
         msg['From'] = self.extra_headers.get('From', self.from_email)
         if self.reply_to:
-        	msg['Reply-To'] = self.reply_to
+            msg['Reply-To'] = self.reply_to
         msg['To'] = ', '.join(self.to)
         if self.cc:
             msg['Cc'] = ', '.join(self.cc)
@@ -246,7 +243,7 @@ class EmailMessage(object):
         """
         return self.to + self.cc + self.bcc
 
-    @gen.engine
+    @gen.coroutine
     def send(self, fail_silently=False, callback=None):
         """Sends the email message."""
         if not self.recipients():
@@ -255,7 +252,7 @@ class EmailMessage(object):
             if callback:
                 callback(0)
                 return
-        result = yield gen.Task(self.get_connection(fail_silently).send_messages, [self])
+        result = yield il.add_callback(self.get_connection(fail_silently).send_messages, [self])
         if callback:
             callback(result)
 
@@ -309,7 +306,7 @@ class EmailMessage(object):
             # Encode non-text attachments with base64.
             attachment = MIMEBase(basetype, subtype)
             attachment.set_payload(content)
-            Encoders.encode_base64(attachment)
+            encoders.encode_base64(attachment)
         return attachment
 
     def _create_attachment(self, filename, content, mimetype=None):
@@ -337,8 +334,8 @@ class EmailMultiAlternatives(EmailMessage):
     alternative_subtype = 'alternative'
 
     def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
-            connection=None, attachments=None, headers=None, alternatives=None,
-            cc=None, reply_to=None):
+                 connection=None, attachments=None, headers=None, alternatives=None,
+                 cc=None, reply_to=None):
         """
         Initialize a single email message (which can be sent to multiple
         recipients).
@@ -347,7 +344,8 @@ class EmailMultiAlternatives(EmailMessage):
         bytestrings). The SafeMIMEText class will handle any necessary encoding
         conversions.
         """
-        super(EmailMultiAlternatives, self).__init__(subject, body, from_email, to, bcc, connection, attachments, headers, cc, reply_to)
+        super(EmailMultiAlternatives, self).__init__(subject, body, from_email, to, bcc, connection, attachments,
+                                                     headers, cc, reply_to)
         self.alternatives = alternatives or []
 
     def attach_alternative(self, content, mimetype):
@@ -379,10 +377,10 @@ class EmailFromTemplate(EmailMultiAlternatives):
     content_subtype = "html"
 
     def __init__(self, subject, template, params={}, from_email=None, to=None,
-            bcc=None, connection=None, attachments=None, headers=None,
-            alternatives=None, cc=None, reply_to=None):
+                 bcc=None, connection=None, attachments=None, headers=None,
+                 alternatives=None, cc=None, reply_to=None):
         if not connection.template_loader:
             raise Exception("Must to set a template_loader to connection")
         body = connection.template_loader.load(template).generate(**params)
         super(EmailFromTemplate, self).__init__(subject, body, from_email, to,
-            bcc, connection, attachments, headers, alternatives, cc, reply_to)
+                                                bcc, connection, attachments, headers, alternatives, cc, reply_to)

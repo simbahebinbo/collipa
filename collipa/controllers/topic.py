@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import tornado.web
+from tornado import web
 
 from .user import EmailMixin
 from ._base import BaseHandler
@@ -19,7 +19,7 @@ class HomeHandler(BaseHandler, EmailMixin):
         page = force_int(self.get_argument('page', 0), 0)
         topic = Topic.get(id=topic_id)
         if not topic:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         category = self.get_argument('category', None)
         if not category:
             category = 'all'
@@ -27,8 +27,11 @@ class HomeHandler(BaseHandler, EmailMixin):
             reply_count = topic.reply_count
             url = topic.url
         elif category == 'hot':
-            reply_count = orm.count(topic.get_replies(page=None,
-                                                      category=category))
+            replies = topic.get_replies(page=None, category=category)
+            if replies:
+                reply_count = orm.count(replies)
+            else:
+                reply_count = 0
             url = topic.url + '?category=hot'
         page_count = (reply_count + config.reply_paged - 1) // config.reply_paged
         if page == 0:
@@ -40,29 +43,29 @@ class HomeHandler(BaseHandler, EmailMixin):
                            page_count=page_count, url=url)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def put(self, topic_id):
         topic_id = int(topic_id)
         topic = Topic.get(id=topic_id)
         if not topic:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         action = self.get_argument('action', None)
         user = self.current_user
         if not action:
             result = {'status': 'info', 'message':
-                      '需要 action 参数'}
+                '需要 action 参数'}
         if action == 'up':
             if topic.user_id != user.id:
                 result = user.up(topic_id=topic_id)
             else:
                 result = {'status': 'info', 'message':
-                          '不能为自己的主题投票'}
+                    '不能为自己的主题投票'}
         if action == 'down':
             if topic.user_id != user.id:
                 result = user.down(topic_id=topic_id)
             else:
                 result = {'status': 'info', 'message':
-                          '不能为自己的主题投票'}
+                    '不能为自己的主题投票'}
         if action == 'collect':
             result = user.collect(topic_id=topic_id)
         if action == 'thank':
@@ -76,7 +79,7 @@ class HomeHandler(BaseHandler, EmailMixin):
             return self.redirect_next_url()
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def delete(self, topic_id):
         topic = Topic.get(id=topic_id)
@@ -128,7 +131,7 @@ class HomeHandler(BaseHandler, EmailMixin):
 
 class CreateHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def get(self):
         node_id = force_int(self.get_argument('node_id', 0), 0)
@@ -142,7 +145,7 @@ class CreateHandler(BaseHandler):
         return self.render("topic/create.html", form=form, node=node)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def post(self):
         node_id = force_int(self.get_argument('node_id', 0), 0)
@@ -165,12 +168,12 @@ class CreateHandler(BaseHandler):
 
 class EditHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def get(self, topic_id):
         topic = Topic.get(id=topic_id)
-        if topic and\
-           (topic.author == self.current_user or self.current_user.is_admin):
+        if topic and \
+                (topic.author == self.current_user or self.current_user.is_admin):
             selected = topic.node.name
         else:
             return self.redirect_next_url()
@@ -181,7 +184,7 @@ class EditHandler(BaseHandler):
         return self.render("topic/create.html", form=form, node=topic.node)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_permission
     def post(self, topic_id):
         topic = Topic.get(id=topic_id)

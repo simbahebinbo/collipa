@@ -2,7 +2,7 @@
 
 import time
 import random
-import tornado.web
+from tornado import web
 
 import os
 import sys
@@ -24,7 +24,7 @@ class HomeHandler(BaseHandler):
     def get(self, urlname, category='all'):
         node = Node.get(urlname=urlname)
         if not node:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         page = force_int(self.get_argument('page', 1), 1)
         action = self.get_argument('action', None)
         tag = self.get_argument('tag', None)
@@ -92,7 +92,7 @@ class HomeHandler(BaseHandler):
 
 class CreateHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def get(self):
         node_id = int(self.get_argument('node_id', 0))
@@ -105,7 +105,7 @@ class CreateHandler(BaseHandler):
         return self.render("node/create.html", form=form)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def post(self):
         user = self.current_user
@@ -118,7 +118,7 @@ class CreateHandler(BaseHandler):
 
 class EditHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def get(self, urlname):
         node = Node.get(urlname=urlname)
@@ -132,7 +132,7 @@ class EditHandler(BaseHandler):
         return self.render("node/edit.html", form=form, node=node)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def post(self, urlname):
         node = Node.get(urlname=urlname)
@@ -163,7 +163,7 @@ class EditHandler(BaseHandler):
 
 class ImgUploadHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     @require_admin
     def post(self, node_id):
         category = self.get_argument('category', None)
@@ -215,8 +215,8 @@ class ImgUploadHandler(BaseHandler):
                         "message": "对不起，请上传长宽在20px~30000px之间的图片！"})
             return
         user = self.current_user
-        upload_path = sys.path[0] + "/static/upload/" + get_year() + '/' +\
-            get_month() + "/"
+        upload_path = sys.path[0] + "/static/upload/" + get_year() + '/' + \
+                      get_month() + "/"
         if not os.path.exists(upload_path):
             try:
                 os.system('mkdir -p %s' % upload_path)
@@ -229,8 +229,8 @@ class ImgUploadHandler(BaseHandler):
         tmp_name = upload_path + timestamp + '.' + image_format
         image_one.save(tmp_name)
         tmp_file.close()
-        path = '/' +\
-            '/'.join(tmp_name.split('/')[tmp_name.split('/').index("static"):])
+        path = '/' + \
+               '/'.join(tmp_name.split('/')[tmp_name.split('/').index("static"):])
         del_path = None
         if category == 'head':
             del_path = node.head_img
@@ -246,8 +246,8 @@ class ImgUploadHandler(BaseHandler):
                 os.system('rm -f %s%s' % (sys.path[0], path))
             except:
                 pass
-            path = '/' +\
-                '/'.join(tmp_name2.split('/')[tmp_name2.split('/').index("static"):])
+            path = '/' + \
+                   '/'.join(tmp_name2.split('/')[tmp_name2.split('/').index("static"):])
             del_path = node.icon_img
             node.icon_img = path
             msg = '节点图标设置成功'

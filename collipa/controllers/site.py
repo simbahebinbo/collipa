@@ -1,15 +1,15 @@
 # coding: utf-8
 
-import tornado.web
+from tornado import web
 
 import time
 from ._base import BaseHandler
 from pony import orm
 
 from collipa.models import Topic, Tweet
-from collipa.extensions import mc
 from collipa.helpers import force_int
 from collipa import config
+from collipa.extensions import rd
 
 
 class CommunityHandler(BaseHandler):
@@ -26,27 +26,27 @@ class CommunityHandler(BaseHandler):
         if category == 'timeline' and not user:
             category = self.set_index_category('index')
         if category == 'hot':
-            topics = mc.get('hot_topics')
+            topics = rd.get('hot_topics')
             if not topics:
                 now = int(time.time())
                 ago = now - 60 * 60 * 24
                 topics = orm.select(rv for rv in Topic if
-                                    rv.created_at > ago).order_by(lambda:
+                                    rv.created_at > ago).order_by(lambda rv:
                                                                   orm.desc((rv.collect_count + rv.thank_count
                                                                             - rv.report_count) * 10 +
                                                                            (rv.up_count - rv.down_count) * 5 +
                                                                            rv.reply_count * 3))
-                mc.set('hot_topics', list(topics), 60 * 60 * 2)
+                rd.set('hot_topics', list(topics), 60 * 60 * 2)
         elif category == 'timeline':
             topics = user.get_followed_topics(page=None, category=view)
         elif category == 'latest':
-            topics = orm.select(rv for rv in Topic).order_by(lambda:
+            topics = orm.select(rv for rv in Topic).order_by(lambda rv:
                                                              orm.desc(rv.created_at))
         elif category == 'desert':
-            topics = orm.select(rv for rv in Topic if rv.reply_count == 0).order_by(lambda:
+            topics = orm.select(rv for rv in Topic if rv.reply_count == 0).order_by(lambda rv:
                                                                                     orm.desc(rv.created_at))
         else:
-            topics = orm.select(rv for rv in Topic).order_by(lambda: orm.desc(rv.last_reply_date))
+            topics = orm.select(rv for rv in Topic).order_by(lambda rv: orm.desc(rv.last_reply_date))
         topic_count = orm.count(topics)
         topics = topics[(page - 1) * config.paged: page * config.paged]
         page_count = (topic_count + config.paged - 1) // config.paged
@@ -83,11 +83,12 @@ class PublicTimelineHandler(BaseHandler):
 
 class MeTimelineHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         page = self.get_int('page', 1)
         from_id = self.get_int('from_id', 0)
-        tweets = Tweet.get_timeline(page=page, from_id=from_id, user_id=self.current_user.id)
+        tweets = Tweet.get_timeline(page=page, from_id=from_id,
+                                    user_id=self.current_user.id)
         return self.render("site/timeline.html",
                            tweets=tweets,
                            cate='me',
@@ -108,4 +109,4 @@ class PageErrorHandler(BaseHandler):
 
 class OtherPageErrorHandler(BaseHandler):
     def get(self):
-        raise tornado.web.HTTPError(302)
+        raise web.HTTPError(302)
