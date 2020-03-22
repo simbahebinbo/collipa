@@ -50,13 +50,13 @@ class Topic(db.Entity, BaseModel):
 
     @property
     def last_reply(self):
-        reply = collipa.models.Reply.select(lambda rv: rv.topic_id == self.id).order_by(lambda:
+        reply = collipa.models.Reply.select(lambda rv: rv.topic_id == self.id).order_by(lambda rv:
                                                                            orm.desc(rv.created_at)).first()
         return reply
 
     @property
     def replies(self):
-        replies = collipa.models.Reply.select(lambda rv: rv.topic_id == self.id).order_by(lambda:
+        replies = collipa.models.Reply.select(lambda rv: rv.topic_id == self.id).order_by(lambda rv:
                                                                              orm.desc(rv.created_at))
         return replies
 
@@ -74,12 +74,12 @@ class Topic(db.Entity, BaseModel):
                 replies = orm.select(rv for rv in collipa.models.Reply if rv.topic_id == self.id and rv.role == category)
 
         if order_by == 'smart':
-            replies = replies.order_by(lambda: orm.desc((rv.collect_count +
+            replies = replies.order_by(lambda rv: orm.desc((rv.collect_count +
                                                             rv.thank_count) * 10 +
                                                            (rv.up_count -
                                                             rv.down_count) * 5))
         else:
-            replies = replies.order_by(lambda: rv.created_at)
+            replies = replies.order_by(lambda rv: rv.created_at)
 
         if limit:
             return replies[:limit]
@@ -101,8 +101,7 @@ class Topic(db.Entity, BaseModel):
             self.role = 'up'
         if ratio > 6:
             self.role = 'dispute'
-        if self.role == 'up' and self.reply_count > 20 and\
-           self.reply_hits > 60:
+        if self.role == 'up' and self.reply_count > 20 and self.reply_hits > 60:
             self.role = 'hot'
 
             if not collipa.models.Bill.get(user_id=self.author.id,
@@ -231,7 +230,7 @@ class Topic(db.Entity, BaseModel):
                                   if rv.topic_id == self.id)
         users = []
         if user_ids:
-            user_ids = user_ids.order_by(lambda: orm.desc(rv.created_at))
+            user_ids = user_ids.order_by(lambda rv: orm.desc(rv.created_at))
 
             users = orm.select(rv for rv in collipa.models.User
                                if rv.id in user_ids)
@@ -249,7 +248,7 @@ class Topic(db.Entity, BaseModel):
                                   if rv.topic_id == self.id)
         users = []
         if user_ids:
-            user_ids = user_ids.order_by(lambda: orm.desc(rv.created_at))
+            user_ids = user_ids.order_by(lambda rv: orm.desc(rv.created_at))
 
             users = orm.select(rv for rv in collipa.models.User
                                if rv.id in user_ids)
@@ -272,19 +271,19 @@ class Topic(db.Entity, BaseModel):
                                   rv.user_id != self.user_id)
         users = []
         if user_ids:
-            user_ids = user_ids.order_by(lambda: orm.desc(rv.created_at))
+            user_ids = user_ids.order_by(lambda rv: orm.desc(rv.created_at))
 
             users = orm.select(rv for rv in collipa.models.User if rv.id in user_ids)
         return users
 
     @property
     def histories(self):
-        histories = collipa.models.History.select(lambda rv: rv.topic_id == self.id).order_by(lambda:
+        histories = collipa.models.History.select(lambda rv: rv.topic_id == self.id).order_by(lambda rv:
                                                                                               orm.desc(rv.created_at))
         return histories
 
     def get_histories(self, page=1):
-        histories = collipa.models.History.select(lambda rv: rv.topic_id == self.id).order_by(lambda:
+        histories = collipa.models.History.select(lambda rv: rv.topic_id == self.id).order_by(lambda rv:
                                                                                               orm.desc(rv.created_at))
         return histories[(page - 1) * config.paged: page * config.paged]
 

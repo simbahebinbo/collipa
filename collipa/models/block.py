@@ -36,7 +36,7 @@ class Block(db.Entity, BaseModel):
         return None
 
     def save(self):
-        super(m.Up, self).save()
+        super(collipa.models.Up, self).save()
 
     def delete(self):
-        super(m.Up, self).delete()
+        super(collipa.models.Up, self).delete()

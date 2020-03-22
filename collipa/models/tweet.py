@@ -103,7 +103,7 @@ class Tweet(db.Entity, BaseModel):
             user_ids = orm.select(rv.user_id for rv in collipa.models.Up if rv.tweet_id == self.id)
         users = []
         if user_ids:
-            user_ids = user_ids.order_by(lambda: orm.desc(rv.created_at))
+            user_ids = user_ids.order_by(lambda rv: orm.desc(rv.created_at))
 
             users = orm.select(rv for rv in collipa.models.User if rv.id in user_ids)
         return users
@@ -119,7 +119,7 @@ class Tweet(db.Entity, BaseModel):
             user_ids = orm.select(rv.user_id for rv in collipa.models.Thank if rv.tweet_id == self.id)
         users = []
         if user_ids:
-            user_ids = user_ids.order_by(lambda: orm.desc(rv.created_at))
+            user_ids = user_ids.order_by(lambda rv: orm.desc(rv.created_at))
 
             users = orm.select(rv for rv in collipa.models.User if rv.id in user_ids)
         return users

@@ -5,6 +5,7 @@ from pony import orm
 from ._base import db, BaseModel
 from collipa import config
 import collipa.models
+from collipa.extensions import rd
 
 from collipa.helpers import strip_tags
 
@@ -110,18 +111,18 @@ class Node(db.Entity, BaseModel):
 
         else:
             if category == 'hot':
-                topics = mc.get('node_%s_hot_topics' % self.id)
+                topics = rd.get('node_%s_hot_topics' % self.id)
                 if not topics:
                     now = int(time.time())
                     ago = now - 60 * 60 * 24
                     topics = orm.select(rv for rv in collipa.models.Topic if
                                     rv.node_id == self.id and
                                     rv.created_at > ago)
-                    topics = topics.order_by(lambda: orm.desc((rv.collect_count +
+                    topics = topics.order_by(lambda rv: orm.desc((rv.collect_count +
                                                                   rv.thank_count - rv.report_count) * 10 +
                                                                  (rv.up_count - rv.down_count) * 5 +
                                                                  rv.reply_count * 3))
-                    mc.set('node_%s_hot_topics' % self.id, list(topics),
+                    rd.set('node_%s_hot_topics' % self.id, list(topics),
                            60 * 60 * 3)
                 order_by = 'none'
             elif category == 'latest':
