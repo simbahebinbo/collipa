@@ -1,4 +1,3 @@
-import types
 import urllib.request, urllib.parse, urllib.error
 import locale
 import datetime

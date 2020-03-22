@@ -4,9 +4,9 @@
 from io import StringIO
 from PIL import Image as Img
 from collipa.libs.pysicle import GifInfo, GifSicle
-import logging
+from collipa.extensions import log
 
-logger = logging.getLogger()
+
 
 
 class Image(object):
@@ -64,7 +64,7 @@ class Image(object):
             with open(fp, 'wb') as f:
                 f.write(data)
         except Exception:
-            logger.info('gif can not save. fp: %s' % fp)
+            log.info('gif can not save. fp: %s' % fp)
             self.img.save(fp, format, **params)
 
     @staticmethod

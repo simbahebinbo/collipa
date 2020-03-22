@@ -1,33 +1,33 @@
 # coding: utf-8
 
-import tornado.web
+from tornado import web
 
 
-class Page(tornado.web.UIModule):
+class Page(web.UIModule):
     def render(self, url, page, page_count):
         return self.render_string("modules/page.html", url=url, page=page,
                                   page_count=page_count)
 
 
-class NotificationList(tornado.web.UIModule):
+class NotificationList(web.UIModule):
     def render(self, notifications):
         return self.render_string("modules/notification_list.html",
                                   notifications=notifications)
 
 
-class MessageBoxList(tornado.web.UIModule):
+class MessageBoxList(web.UIModule):
     def render(self, message_boxes):
         return self.render_string("modules/message_box_list.html",
                                   message_boxes=message_boxes)
 
 
-class MessageList(tornado.web.UIModule):
+class MessageList(web.UIModule):
     def render(self, messages):
         return self.render_string("modules/message_list.html",
                                   messages=messages)
 
 
-class MessageForm(tornado.web.UIModule):
+class MessageForm(web.UIModule):
     def render(self, user, form, action=None, button="发送"):
         return self.render_string("modules/message_form.html", form=form,
                                   action='/message/create?user_id=%s' % user.id,
@@ -35,19 +35,19 @@ class MessageForm(tornado.web.UIModule):
                                   button=button)
 
 
-class NodeForm(tornado.web.UIModule):
+class NodeForm(web.UIModule):
     def render(self, form, action=None, button="创建"):
         return self.render_string("modules/node_form.html", form=form, action=action,
                                   button=button)
 
 
-class TopicForm(tornado.web.UIModule):
+class TopicForm(web.UIModule):
     def render(self, form, action=None, button="创建"):
         return self.render_string("modules/topic_form.html", form=form, action=action,
                                   button=button)
 
 
-class ReplyForm(tornado.web.UIModule):
+class ReplyForm(web.UIModule):
     def render(self, form, topic, action=None, page=1, button="创建"):
         return self.render_string("modules/reply_form.html", form=form,
                                   topic=topic,
@@ -56,80 +56,80 @@ class ReplyForm(tornado.web.UIModule):
                                   button=button)
 
 
-class SettingForm(tornado.web.UIModule):
+class SettingForm(web.UIModule):
     def render(self, form, action=None, button="确定"):
         return self.render_string("modules/setting_form.html", form=form, action=action,
                                   button=button)
 
 
-class Form(tornado.web.UIModule):
+class Form(web.UIModule):
     def render(self, form, action=None, button="确定"):
         return self.render_string("modules/form.html", form=form, action=action,
                                   button=button)
 
 
-class FormContent(tornado.web.UIModule):
+class FormContent(web.UIModule):
     def render(self, form):
         return self.render_string("modules/form_content.html", form=form)
 
 
-class UserList(tornado.web.UIModule):
+class UserList(web.UIModule):
     def render(self, users):
         return self.render_string("modules/user_list.html", users=users)
 
 
-class NodeList(tornado.web.UIModule):
+class NodeList(web.UIModule):
     def render(self, nodes):
         return self.render_string("modules/node_list.html", nodes=nodes)
 
 
-class HistoryList(tornado.web.UIModule):
+class HistoryList(web.UIModule):
     def render(self, histories):
         return self.render_string("modules/history_list.html",
                                   histories=histories)
 
 
-class TopicWrap(tornado.web.UIModule):
+class TopicWrap(web.UIModule):
     def render(self, topic, classes=[], key=None):
         return self.render_string("modules/topic_wrap.html", topic=topic,
                                   classes=classes, key=key)
 
 
-class TopicList(tornado.web.UIModule):
+class TopicList(web.UIModule):
     def render(self, topics):
         return self.render_string("modules/topic_list.html", topics=topics)
 
 
-class TopicList2(tornado.web.UIModule):
+class TopicList2(web.UIModule):
     def render(self, topics):
         return self.render_string("modules/topic_list2.html", topics=topics)
 
 
-class ReplyList(tornado.web.UIModule):
+class ReplyList(web.UIModule):
     def render(self, replies):
         return self.render_string("modules/reply_list.html", replies=replies)
 
 
-class ReplyList2(tornado.web.UIModule):
+class ReplyList2(web.UIModule):
     def render(self, replies):
         return self.render_string("modules/reply_list2.html", replies=replies)
 
 
-class SiteHead(tornado.web.UIModule):
+class SiteHead(web.UIModule):
     def render(self):
         return self.render_string("modules/site_head.html")
 
 
-class UserHead(tornado.web.UIModule):
+class UserHead(web.UIModule):
     def render(self, user):
         return self.render_string("modules/user_head.html", user=user)
 
 
-class TopicHead(tornado.web.UIModule):
+class TopicHead(web.UIModule):
     def render(self):
         return self.render_string("modules/topic_head.html")
 
 
-class NodeHead(tornado.web.UIModule):
+class NodeHead(web.UIModule):
     def render(self):
         return self.render_string("modules/node_head.html")

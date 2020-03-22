@@ -38,12 +38,6 @@ ubuntu 16.04
 sudo apt-get install mysql-server
 ```
 
-### 安装 memcached
-
-```
-sudo apt-get install memcached
-```
-
 ### 安装 redis
 
 ```

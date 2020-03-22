@@ -3,13 +3,12 @@
 import time
 import hashlib
 import base64
-import tornado.web
+from tornado import web
 import os
 import logging
 import tempfile
 from pony import orm
 from concurrent import futures
-
 
 from .web_api import WebSocketHandler
 from ._base import BaseHandler
@@ -84,7 +83,7 @@ class HomeHandler(BaseHandler):
         page = force_int(self.get_argument('page', 1), 1)
         user = User.get(urlname=urlname)
         if not user:
-            raise tornado.web.HTTPError(404)
+            raise web.HTTPError(404)
         action = self.get_argument('action', None)
         if action and self.current_user:
             if action == 'follow' and user != self.current_user:
@@ -176,7 +175,7 @@ class SignupHandler(BaseHandler, EmailMixin):
         content = template.format(username=user.name, url=url)
         self.send_email(self, user.email, subject, content)
         result = {'status': 'info', 'message':
-                  '激活邮件已经发到您的邮箱，请去邮箱进行激活'}
+            '激活邮件已经发到您的邮箱，请去邮箱进行激活'}
         self.flash_message(**result)
 
 
@@ -202,7 +201,7 @@ class SignoutHandler(BaseHandler):
 
 class NotificationHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         page = force_int(self.get_argument('page', 1), 1)
         category = self.get_argument('category', 'all')
@@ -213,7 +212,7 @@ class NotificationHandler(BaseHandler):
 
 class MessageHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         page = force_int(self.get_argument('page', 1), 1)
         user_id = force_int(self.get_argument('user_id', 0), 0)
@@ -238,7 +237,7 @@ class MessageHandler(BaseHandler):
                 pass
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         action = self.get_argument('action', None)
         if action != "read":
@@ -257,7 +256,7 @@ class MessageHandler(BaseHandler):
 
 class MessageCreateHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         user_id = force_int(self.get_argument('user_id', 0), 0)
         sender = self.current_user
@@ -301,6 +300,7 @@ class PasswordHandler(BaseHandler, EmailMixin):
     - GET: 1. form view 2. verify link from email
     - POST: 1. send email to find password. 2. change password
     """
+
     @orm.db_session
     def get(self):
         token = self.get_argument('verify', None)
@@ -357,7 +357,7 @@ class PasswordHandler(BaseHandler, EmailMixin):
         self.send_email(self, user.email, '找回密码', content)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def change_password(self):
         user = User.get(id=self.current_user.id)
         password = self.get_argument('password', None)
@@ -414,14 +414,14 @@ class FindPasswordHandler(BaseHandler):
 
 class SettingHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         user = self.current_user
         form = SettingForm.init(user)
         return self.render("user/setting.html", form=form)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         user = self.current_user
         form = SettingForm.init(user=user, **self.request.arguments)
@@ -431,7 +431,7 @@ class SettingHandler(BaseHandler):
         return self.render("user/setting.html", form=form)
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def delete(self):
         action = self.get_argument("action", None)
         if not action:
@@ -448,7 +448,7 @@ class SettingHandler(BaseHandler):
 
 class AvatarDelHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         user = self.current_user
         if user.avatar:
@@ -462,7 +462,7 @@ class AvatarDelHandler(BaseHandler):
 
 class AvatarUploadHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         self.render("user/avatar_upload.html")
 
@@ -534,7 +534,7 @@ class AvatarUploadHandler(BaseHandler):
 
 class AvatarCropHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def get(self):
         if not self.current_user.avatar_tmp:
             result = {"status": "error", "message": "您还没有上传头像哦"}
@@ -542,7 +542,7 @@ class AvatarCropHandler(BaseHandler):
         return self.render("user/avatar_crop.html")
 
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         user = self.current_user
         x = int(self.get_argument('x', 0))
@@ -588,7 +588,7 @@ class AvatarCropHandler(BaseHandler):
 
 class BackgroundDelHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         remove_file(get_asset_path(self.current_user.background_img))
         self.current_user.background_img = ''
@@ -602,7 +602,7 @@ class BackgroundDelHandler(BaseHandler):
 
 class ImgUploadHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self):
         if not self.has_permission:
             return

@@ -2,6 +2,7 @@
 
 import sys
 import imp
+
 imp.reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -13,6 +14,7 @@ from collipa.models import db
 @orm.db_session
 def runshell():
     embed()
+
 
 if __name__ == '__main__':
     db.generate_mapping()

@@ -21,7 +21,7 @@ cookie_secret = 'cookiesecret'  # cookie secret
 password_secret = 'passwordsecret'  # password secret
 
 site_name = 'Collipa'
-site_url = 'http://127.0.0.1:9090'
+site_url = 'http://127.0.0.1:9999'
 site_description = 'Good'
 
 paged = 18
@@ -102,4 +102,3 @@ except ImportError:
 
 database = 'mysql://%s:%s@%s/%s?charset=utf8' % (db_user, db_pass, db_host,
                                                  db_name)
-

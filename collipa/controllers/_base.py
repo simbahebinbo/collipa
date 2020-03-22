@@ -6,6 +6,7 @@ from pony import orm
 
 from collipa import models as m
 from collipa.helpers import force_int
+from tornado import escape
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -13,9 +14,9 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         user_json = self.get_secure_cookie('user')
         if user_json:
-            id = int(tornado.escape.json_decode(user_json)['id'])
-            token = tornado.escape.json_decode(user_json)['token']
             user = m.User.get(id=id)
+            id = int(escape.json_decode(user_json)['id'])
+            token = escape.json_decode(user_json)['token']
             if not user:
                 return None
             if token == user.token:
@@ -28,7 +29,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def set_current_user(self, user):
         if user:
             self.set_secure_cookie('user',
-                                   tornado.escape.json_encode({
+                                   escape.json_encode({
                                        'token': user.token,
                                        'id': user.id
                                    }))
@@ -37,7 +38,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def set_index_category(self, category='index'):
         self.set_secure_cookie('index_category',
-                               tornado.escape.json_encode(category))
+                               escape.json_encode(category))
         return category
 
     @property
@@ -45,25 +46,25 @@ class BaseHandler(tornado.web.RequestHandler):
         category_json = self.get_secure_cookie('index_category')
         if not category_json:
             return self.set_index_category()
-        return tornado.escape.json_decode(category_json)
+        return escape.json_decode(category_json)
 
     def set_node_category(self, node, category='index'):
         self.set_secure_cookie('node_category_%s' % node.id,
-                               tornado.escape.json_encode(category))
+                               escape.json_encode(category))
         return category
 
     def get_node_category(self, node):
         category_json = self.get_secure_cookie('node_category_%s' % node.id)
         if not category_json:
             return self.set_node_category(node)
-        return tornado.escape.json_decode(category_json)
+        return escape.json_decode(category_json)
 
     @property
     def is_ajax(self):
         if '_ajax' in self.request.arguments:
             return True
-        if 'X-Requested-With' in self.request.headers and\
-                self.request.headers['X-Requested-With'].lower() ==\
+        if 'X-Requested-With' in self.request.headers and \
+                self.request.headers['X-Requested-With'].lower() == \
                 'xmlhttprequest':
             return True
         return False
@@ -85,7 +86,7 @@ class BaseHandler(tornado.web.RequestHandler):
             messages = self.get_secure_cookie('flash_messages')
             self._messages = []
             if messages:
-                self._messages = tornado.escape.json_decode(messages)
+                self._messages = escape.json_decode(messages)
         return self._messages
 
     def flash_message(self, **kwargs):
@@ -104,7 +105,7 @@ class BaseHandler(tornado.web.RequestHandler):
         message = (category, msg)
         self.messages.append(message)
         self.set_secure_cookie('flash_messages',
-                               tornado.escape.json_encode(self.messages))
+                               escape.json_encode(self.messages))
         return message
 
     @property

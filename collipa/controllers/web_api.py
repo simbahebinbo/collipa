@@ -1,18 +1,15 @@
 # coding: utf-8
 
 import logging
-import tornado.web
-import tornado.websocket
-import tornado.escape
+from tornado import websocket
 
 from ._base import BaseHandler
 from pony import orm
 
 from collipa.models import User
-from collipa.extensions import rd
 
 
-class WebSocketHandler(BaseHandler, tornado.websocket.WebSocketHandler):
+class WebSocketHandler(BaseHandler, websocket.WebSocketHandler):
     users = {}
     onlines = set()
 

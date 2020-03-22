@@ -13,7 +13,6 @@ from collipa.controllers import (site,
 
 from collipa.controllers.api import v1
 
-
 routers = [
     (r"/", site.CommunityHandler),
     (r"/timeline", site.TimelineHandler),

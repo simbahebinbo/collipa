@@ -38,6 +38,7 @@ def require_admin(func):
             return func(self, *args, **kwargs)
         result = {"status": "error", "message": "对不起，您没有相关权限"}
         self.send_result(result)
+
     return wrap
 
 
@@ -56,6 +57,7 @@ def require_permission(func):
         else:
             result = {"status": "error", "message": "对不起，您没有相关权限"}
         self.send_result(result)
+
     return wrap
 
 
@@ -65,6 +67,7 @@ def get_day(timestamp):
     time.tzset()
     str = time.strftime(FORY, time.localtime(timestamp))
     return str
+
 
 '''
 def get_month(timestamp):
@@ -224,6 +227,7 @@ class _Missing(object):
 
     def __reduce__(self):
         return '_missing'
+
 
 _missing = _Missing()
 
@@ -430,7 +434,8 @@ def process_163music(content):
     embed_tpl = '<div class="music-wrapper"><iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="http://music.163.com/outchain/player?type=2&id={music_id}&auto=0&height=66"></iframe></div>'
     music_ids = re.findall(r'http://music\.163\.com/#/song\?id=(?P<music_id>\d+)', content)
     for music_id in music_ids:
-        content = content.replace('http://music.163.com/#/song?id={}'.format(music_id), embed_tpl.format(music_id=music_id))
+        content = content.replace('http://music.163.com/#/song?id={}'.format(music_id),
+                                  embed_tpl.format(music_id=music_id))
     return content
 
 

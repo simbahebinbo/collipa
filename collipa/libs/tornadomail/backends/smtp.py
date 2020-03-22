@@ -7,12 +7,14 @@ from ..utils import DNS_NAME
 from ..message import sanitize_address
 
 from tornado import gen
+from collipa.extensions import il
 
 
 class EmailBackend(BaseEmailBackend):
     """
     A wrapper that manages the SMTP network connection.
     """
+
     def __init__(self, host=None, port=None, username=None, password=None,
                  use_tls=None, fail_silently=False, **kwargs):
         super(EmailBackend, self).__init__(fail_silently=fail_silently)
@@ -27,7 +29,7 @@ class EmailBackend(BaseEmailBackend):
         self.connection = None
         self.template_loader = kwargs.get('template_loader', None)
 
-    @gen.engine
+    @gen.coroutine
     def open(self, callback):
         """
         Ensures we have a connection to the email server. Returns whether or
@@ -41,13 +43,13 @@ class EmailBackend(BaseEmailBackend):
             # For performance, we use the cached FQDN for local_hostname.
             self.connection = smtplib.SMTP(self.host, self.port,
                                            local_hostname=DNS_NAME.get_fqdn())
-            yield gen.Task(self.connection.connect, self.host, self.port)
+            yield il.add_callback(self.connection.connect, self.host, self.port)
             if self.use_tls:
-                yield gen.Task(self.connection.ehlo)
-                yield gen.Task(self.connection.starttls)
-                yield gen.Task(self.connection.ehlo)
+                yield il.add_callback(self.connection.ehlo)
+                yield il.add_callback(self.connection.starttls)
+                yield il.add_callback(self.connection.ehlo)
             if self.username and self.password:
-                yield gen.Task(self.connection.login, self.username, self.password)
+                yield il.add_callback(self.connection.login, self.username, self.password)
             callback(True)
         except:
             if not self.fail_silently:
@@ -69,7 +71,7 @@ class EmailBackend(BaseEmailBackend):
         finally:
             self.connection = None
 
-    @gen.engine
+    @gen.coroutine
     def send_messages(self, email_messages, callback=None):
         """
         Sends one or more EmailMessage objects and returns the number of email
@@ -78,14 +80,14 @@ class EmailBackend(BaseEmailBackend):
         if not email_messages:
             return
 
-        new_conn_created = yield gen.Task(self.open)
+        new_conn_created = yield il.add_callback(self.open)
         if not self.connection:
             # We failed silently on open().
             # Trying to send would be pointless.
             return
         num_sent = 0
         for message in email_messages:
-            sent = yield gen.Task(self._send, message)
+            sent = yield il.add_callback(self._send, message)
             if sent:
                 num_sent += 1
         if new_conn_created:
@@ -93,7 +95,7 @@ class EmailBackend(BaseEmailBackend):
         if callback:
             callback(num_sent)
 
-    @gen.engine
+    @gen.coroutine
     def _send(self, email_message, callback=None):
         """A helper method that does the actual sending."""
         if not email_message.recipients():
@@ -103,8 +105,8 @@ class EmailBackend(BaseEmailBackend):
         recipients = [sanitize_address(addr, email_message.encoding)
                       for addr in email_message.recipients()]
         try:
-            yield gen.Task(self.connection.sendmail, from_email, recipients,
-                    email_message.message().as_string())
+            yield il.add_callback(self.connection.sendmail, from_email, recipients,
+                                  email_message.message().as_string())
         except:
             if not self.fail_silently:
                 raise

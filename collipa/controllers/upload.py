@@ -3,7 +3,7 @@
 import time
 
 import os
-import tornado.web
+from tornado import web
 from pony import orm
 from ._base import BaseHandler
 from collipa.helpers import get_year, get_month, gen_random_str, mkdir_p, get_relative_path
@@ -12,7 +12,7 @@ from collipa import config
 
 class UploadHandler(BaseHandler):
     @orm.db_session
-    @tornado.web.authenticated
+    @web.authenticated
     def post(self, category):
         if not self.has_permission:
             return

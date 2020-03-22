@@ -2,26 +2,29 @@
 
 import re
 from collipa import config
-import memcache
 import redis
 import pickle as pickle
 from functools import wraps
-
-mc = memcache.Client(['127.0.0.1:11211'], debug=1)
+from tornado import ioloop
+import logging
 
 rd = redis.StrictRedis(host='127.0.0.1', port=config.rd_port, db=0)
+il = ioloop.IOLoop.current()
+log = logging.getLogger()
 
 
-def memcached(key, limit=86400):
+def cached(key, limit=86400):
     def wrap(func):
         @wraps(func)
         def get_value(*args, **kwargs):
-            value = mc.get(key)
+            value = rd.get(key)
             if not value:
                 value = func(*args, **kwargs)
-                mc.set(key, value, limit)
+                rd.set(key, value, limit)
             return value
+
         return get_value
+
     return wrap
 
 
@@ -36,18 +39,10 @@ def img_convert(text):
 
 def pk(name, value=None):
     if value:
-        try:
-            f = file('/dev/shm/' + name + '.pkl', 'wb')
+        with open('/dev/shm/' + name + '.pkl', 'wb') as f:
             pickle.dump(value, f, 2)
-            f.close()
             return True
-        except Exception as e:
-            print(e)
-            return False
-    try:
-        f = file('/dev/shm/' + name + '.pkl', 'rb')
+
+    with open('/dev/shm/' + name + '.pkl', 'rb') as f:
         value = pickle.load(f)
-        f.close()
         return value
-    except:
-        return None
