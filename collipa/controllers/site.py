@@ -9,7 +9,7 @@ from pony import orm
 from collipa.helpers import force_int
 from collipa import config
 from collipa.extensions import rd
-import collipa.models
+from collipa.models import Topic, Tweet
 
 
 class CommunityHandler(BaseHandler):
@@ -28,8 +28,8 @@ class CommunityHandler(BaseHandler):
         if category == 'hot':
             now = int(time.time())
             ago = now - 60 * 60 * 24
-            topics = orm.select(rv for rv in collipa.models.Topic if
-                                rv.created_at > ago).order_by(lambda rv:
+            topics = orm.select(rv for rv in Topic if
+                                rv.created_at > ago).order_by(lambda:
                                                               orm.desc((rv.collect_count + rv.thank_count
                                                                         - rv.report_count) * 10 +
                                                                        (rv.up_count - rv.down_count) * 5 +
@@ -37,14 +37,14 @@ class CommunityHandler(BaseHandler):
         elif category == 'timeline':
             topics = user.get_followed_topics(page=None, category=view)
         elif category == 'latest':
-            topics = orm.select(rv for rv in collipa.models.Topic).order_by(lambda rv:
+            topics = orm.select(rv for rv in Topic).order_by(lambda:
                                                                             orm.desc(rv.created_at))
         elif category == 'desert':
-            topics = orm.select(rv for rv in collipa.models.Topic if rv.reply_count == 0).order_by(lambda rv:
+            topics = orm.select(rv for rv in Topic if rv.reply_count == 0).order_by(lambda:
                                                                                                    orm.desc(
                                                                                                        rv.created_at))
         else:
-            topics = orm.select(rv for rv in collipa.models.Topic).order_by(lambda rv: orm.desc(rv.last_reply_date))
+            topics = orm.select(rv for rv in Topic).order_by(lambda: orm.desc(rv.last_reply_date))
         topic_count = orm.count(topics)
         topics = topics[(page - 1) * config.paged: page * config.paged]
         page_count = (topic_count + config.paged - 1) // config.paged
@@ -72,7 +72,7 @@ class PublicTimelineHandler(BaseHandler):
     def get(self):
         page = self.get_int('page', 1)
         from_id = self.get_int('from_id', 0)
-        tweets = collipa.models.Tweet.get_timeline(page=page, from_id=from_id)
+        tweets = Tweet.get_timeline(page=page, from_id=from_id)
         return self.render("site/timeline.html",
                            tweets=tweets,
                            cate='public',
@@ -85,7 +85,7 @@ class MeTimelineHandler(BaseHandler):
     def get(self):
         page = self.get_int('page', 1)
         from_id = self.get_int('from_id', 0)
-        tweets = collipa.models.Tweet.get_timeline(page=page, from_id=from_id,
+        tweets = Tweet.get_timeline(page=page, from_id=from_id,
                                                    user_id=self.current_user.id)
         return self.render("site/timeline.html",
                            tweets=tweets,

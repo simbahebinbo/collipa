@@ -14,9 +14,9 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         user_json = self.get_secure_cookie('user')
         if user_json:
-            user = m.User.get(id=id)
             id = int(escape.json_decode(user_json)['id'])
             token = escape.json_decode(user_json)['token']
+            user = m.User.get(id=id)
             if not user:
                 return None
             if token == user.token:
