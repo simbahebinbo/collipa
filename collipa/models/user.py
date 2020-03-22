@@ -13,7 +13,6 @@ from collipa.extensions import rd, cached
 from collipa.supports import Struct
 
 
-
 class User(db.Entity, BaseModel):
     name = orm.Required(str, 40, unique=True)
     email = orm.Required(str, unique=True)
@@ -98,7 +97,7 @@ class User(db.Entity, BaseModel):
             'url': self.url,
             'name': self.nickname,
             'avatar': self.get_avatar(),
-            }
+        }
 
         return data
 
@@ -564,8 +563,8 @@ class User(db.Entity, BaseModel):
         user_ids.append(self.id)
         if not from_id:
             tweets = (orm.select(rv for rv in collipa.models.Tweet if rv.user_id in user_ids)
-                      .order_by(lambda rv: orm.desc(rv.created_at))
-                      [(page - 1) * config.paged: page * config.paged])
+                          .order_by(lambda rv: orm.desc(rv.created_at))
+            [(page - 1) * config.paged: page * config.paged])
             return tweets
         all_ids_q = orm.select(rv.id for rv in collipa.models.Tweet if
                                rv.user_id in user_ids).order_by(lambda rv: orm.desc(rv.created_at))
@@ -680,10 +679,10 @@ class User(db.Entity, BaseModel):
     def get_notifications(self, page=1, category='all'):
         if category == 'all':
             notifications = collipa.models.Notification.select(lambda rv:
-                                                  rv.receiver_id == self.id)
+                                                               rv.receiver_id == self.id)
         elif category == 'unread':
             notifications = collipa.models.Notification.select(lambda rv:
-                                                  rv.receiver_id == self.id and rv.status == 0)
+                                                               rv.receiver_id == self.id and rv.status == 0)
         else:
             return []
         notifications = notifications.order_by(lambda rv: orm.desc(rv.updated_at))
@@ -728,7 +727,7 @@ class User(db.Entity, BaseModel):
         else:
             return []
         return message_boxes[(page - 1) * config.paged: page *
-                             config.paged]
+                                                        config.paged]
 
     def get_message_box(self, user=None):
         message_boxes = collipa.models.MessageBox.select(lambda rv:
@@ -764,16 +763,13 @@ class User(db.Entity, BaseModel):
             users = orm.select(rv for rv in User).order_by(lambda rv:
                                                            orm.desc(rv.created_at))
         elif category == 'hot':
-            users = rd.get('hot_users')
-            if not users:
-                if not limit:
-                    limit = 8
-                users = orm.select(rv for rv in User).order_by(lambda rv:
-                                                               orm.desc(rv.thank_count * 4 +
-                                                                        rv.up_count * 3 +
-                                                                        rv.topic_count * 2 +
-                                                                        rv.reply_count))[:limit]
-                rd.set('hot_users', list(users), 60 * 60 * 12)
+            if not limit:
+                limit = 8
+            users = orm.select(rv for rv in User).order_by(lambda rv:
+                                                           orm.desc(rv.thank_count * 4 +
+                                                                    rv.up_count * 3 +
+                                                                    rv.topic_count * 2 +
+                                                                    rv.reply_count))[:limit]
         elif category == 'new':
             users = orm.select(rv for rv in User).order_by(lambda rv: orm.desc(rv.created_at))
         else:

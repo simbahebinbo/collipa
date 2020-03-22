@@ -113,9 +113,11 @@ class Album(db.Entity, BaseModel):
 
     def get_uppers(self, after_date=None, before_date=None):
         if after_date:
-            user_ids = orm.select(rv.user_id for rv in collipa.models.Up if rv.album_id == self.id and rv.created_at > after_date)
+            user_ids = orm.select(
+                rv.user_id for rv in collipa.models.Up if rv.album_id == self.id and rv.created_at > after_date)
         elif before_date:
-            user_ids = orm.select(rv.user_id for rv in collipa.models.Up if rv.album_id == self.id and rv.created_at < before_date)
+            user_ids = orm.select(
+                rv.user_id for rv in collipa.models.Up if rv.album_id == self.id and rv.created_at < before_date)
         else:
             user_ids = orm.select(rv.user_id for rv in collipa.models.Up if rv.album_id == self.id)
         users = []
@@ -127,9 +129,11 @@ class Album(db.Entity, BaseModel):
 
     def get_thankers(self, after_date=None, before_date=None):
         if after_date:
-            user_ids = orm.select(rv.user_id for rv in collipa.models.Thank if rv.album_id == self.id and rv.created_at > after_date)
+            user_ids = orm.select(
+                rv.user_id for rv in collipa.models.Thank if rv.album_id == self.id and rv.created_at > after_date)
         elif before_date:
-            user_ids = orm.select(rv.user_id for rv in collipa.models.Thank if rv.album_id == self.id and rv.created_at < before_date)
+            user_ids = orm.select(
+                rv.user_id for rv in collipa.models.Thank if rv.album_id == self.id and rv.created_at < before_date)
         else:
             user_ids = orm.select(rv.user_id for rv in collipa.models.Thank if rv.album_id == self.id)
         users = []

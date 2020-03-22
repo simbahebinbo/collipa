@@ -111,19 +111,15 @@ class Node(db.Entity, BaseModel):
 
         else:
             if category == 'hot':
-                topics = rd.get('node_%s_hot_topics' % self.id)
-                if not topics:
-                    now = int(time.time())
-                    ago = now - 60 * 60 * 24
-                    topics = orm.select(rv for rv in collipa.models.Topic if
+                now = int(time.time())
+                ago = now - 60 * 60 * 24
+                topics = orm.select(rv for rv in collipa.models.Topic if
                                     rv.node_id == self.id and
                                     rv.created_at > ago)
-                    topics = topics.order_by(lambda rv: orm.desc((rv.collect_count +
-                                                                  rv.thank_count - rv.report_count) * 10 +
-                                                                 (rv.up_count - rv.down_count) * 5 +
-                                                                 rv.reply_count * 3))
-                    rd.set('node_%s_hot_topics' % self.id, list(topics),
-                           60 * 60 * 3)
+                topics = topics.order_by(lambda rv: orm.desc((rv.collect_count +
+                                                              rv.thank_count - rv.report_count) * 10 +
+                                                             (rv.up_count - rv.down_count) * 5 +
+                                                             rv.reply_count * 3))
                 order_by = 'none'
             elif category == 'latest':
                 topics = orm.select(rv for rv in collipa.models.Topic if rv.node_id == self.id)

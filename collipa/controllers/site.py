@@ -26,17 +26,14 @@ class CommunityHandler(BaseHandler):
         if category == 'timeline' and not user:
             category = self.set_index_category('index')
         if category == 'hot':
-            topics = rd.get('hot_topics')
-            if not topics:
-                now = int(time.time())
-                ago = now - 60 * 60 * 24
-                topics = orm.select(rv for rv in collipa.models.Topic if
-                                    rv.created_at > ago).order_by(lambda rv:
-                                                                  orm.desc((rv.collect_count + rv.thank_count
-                                                                            - rv.report_count) * 10 +
-                                                                           (rv.up_count - rv.down_count) * 5 +
-                                                                           rv.reply_count * 3))
-                rd.set('hot_topics', list(topics), 60 * 60 * 2)
+            now = int(time.time())
+            ago = now - 60 * 60 * 24
+            topics = orm.select(rv for rv in collipa.models.Topic if
+                                rv.created_at > ago).order_by(lambda rv:
+                                                              orm.desc((rv.collect_count + rv.thank_count
+                                                                        - rv.report_count) * 10 +
+                                                                       (rv.up_count - rv.down_count) * 5 +
+                                                                       rv.reply_count * 3))
         elif category == 'timeline':
             topics = user.get_followed_topics(page=None, category=view)
         elif category == 'latest':
